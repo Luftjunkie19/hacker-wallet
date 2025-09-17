@@ -13,7 +13,7 @@ function IndexRouterPopup({}: Props) {
     <div className="plasmo-p-4 plasmo-flex  plasmo-items-center plasmo-flex-col plasmo-gap-8 plasmo-bg-primary plasmo-min-w-96 plasmo-h-[36rem]">
 <div className="plasmo-flex plasmo-gap-4 plasmo-flex-col plasmo-justify-center plasmo-items-center">
            <div className="self-center">
-              <img src='./icon.png' width={40} height={40} className="plasmo-w-12 plasmo-h-12 plasmo-rounded-lg" alt="HackerWallet Logo" />
+              <img src={require('./icon.png')} width={64} height={64} className="plasmo-w-16 plasmo-h-16 plasmo-rounded-lg" alt="HackerWallet Logo" />
       </div>
         <p className="plasmo-text-2xl plasmo-text-center plasmo-font-bold plasmo-text-secondary">
         HackerWallet

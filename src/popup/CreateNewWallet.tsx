@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import {generateMnemonic, mnemonicToSeedSync} from 'bip39'
 import { Button } from '@radix-ui/themes';
-import { Label } from '@radix-ui/themes/dist/cjs/components/context-menu';
-
-
+import {Toast} from 'radix-ui';
+import {ethers} from 'ethers';
 
 type Props = {}
 
@@ -12,7 +11,10 @@ function CreateNewWallet({}: Props) {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [indicies, setIndices] = useState<Set<number>>(new Set());
   const [mnemonic, setMnemonic] = useState<string>();
+  const [seed, setSeed] = useState<string>(); 
+  const [open, setOpen] = useState(false);
   const [inputPhrase, setInputPhrase] = useState<string>('');
+
 
 useEffect(() => {
     if(!mnemonic){
@@ -27,7 +29,7 @@ useEffect(() => {
 const handleConfirm = () => {
   if (mnemonic) {
     const seed = mnemonicToSeedSync(mnemonic);
-    console.log('Seed:', seed.toString('hex'));
+    setSeed(seed.toString('hex'));
     const lengthOfMnemonic = mnemonic.split(' ').length;
     const indiciesToConfirm = new Set<number>();
 
@@ -45,6 +47,27 @@ const handleConfirm = () => {
     console.log('Mnemonic:', mnemonic);
   }
 };
+
+const handleCheckMnemonicWords=() => {
+        if(mnemonic.split(' ')[currentStep] === inputPhrase.trim()){
+          const nextIndex = Array.from(indicies)[Array.from(indicies).indexOf(currentStep) + 1];
+          if (nextIndex !== undefined) {
+            setCurrentStep(nextIndex);
+            setInputPhrase('');
+          }
+        } else {
+          console.log('Error: No more indices to confirm.');
+          alert('Incorrect word, please try again.');
+          // Reset state or proceed to the next step in your app
+          setConfirmInput(false);
+          setIndices(new Set());
+          setCurrentStep(0);
+          // setMnemonic(undefined); // Optionally generate a new mnemonic
+          setInputPhrase('');
+        }
+        
+
+      };
 
   return (
       <div className='plasmo-flex plasmo-flex-col plasmo-gap-4  plasmo-w-full
@@ -94,12 +117,14 @@ value={inputPhrase}
 
 {
       mnemonic && !confirmInput && <>    
-      <Button
-      onClick={
-        () => {
-          navigator.clipboard.writeText(mnemonic);
-        }
-      }
+
+	<Toast.Provider swipeDirection="right">
+
+          <Button
+      	onClick={() => {
+        navigator.clipboard.writeText(mnemonic);
+        setOpen(true);
+				}}
 
       className='
       plasmo-max-w-36
@@ -108,6 +133,26 @@ value={inputPhrase}
       >
         Copy to Clipboard
       </Button>
+
+			<Toast.Root className="
+      plasmo-w-full plasmo-p-2 plasmo-flex plasmo-items-center plasmo-gap-4
+      " open={open} onOpenChange={setOpen}>
+				<Toast.Title className="
+        plasmo-text-white plasmo-font-semibold
+        ">Mnemonic Copied !</Toast.Title>
+				<Toast.Action
+					className="ToastAction"
+					asChild
+					altText="Goto schedule to undo"
+				>
+					<button className="
+          plasmo-text-red-500 plasmo-font-light plasmo-underline plasmo-cursor-pointer
+          ">Undo</button>
+				</Toast.Action>
+			</Toast.Root>
+			<Toast.Viewport className="ToastViewport" />
+		</Toast.Provider>
+
 
 <div className='
 plasmo-py-6 plasmo-w-full
@@ -142,27 +187,7 @@ className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasm
       hover:plasmo-bg-accent hover hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500
       plasmo-w-full plasmo-cursor-pointer
       '
-      onClick={() => {
-        if(
-          mnemonic.split(' ')[currentStep] === inputPhrase.trim()
-        ){
-          const nextIndex = Array.from(indicies)[Array.from(indicies).indexOf(currentStep) + 1];
-          if (nextIndex !== undefined) {
-            setCurrentStep(nextIndex);
-            setInputPhrase('');
-          }
-        } else {
-          console.log('Error: No more indices to confirm.');
-          alert('Incorrect word, please try again.');
-          // Reset state or proceed to the next step in your app
-          setConfirmInput(false);
-          setIndices(new Set());
-          setCurrentStep(0);
-          setMnemonic(undefined); // Optionally generate a new mnemonic
-        }
-
-      }}
-
+      onClick={handleCheckMnemonicWords}
       >
         Next
       </Button>
