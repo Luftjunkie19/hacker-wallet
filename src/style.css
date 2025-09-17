@@ -1,4 +1,6 @@
+
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap");
+@import "@radix-ui/themes/styles.css";
 
 @tailwind base;
 @tailwind components;
@@ -7,4 +9,5 @@
 #plasmo-shadow-container {
   all: initial;
   box-sizing: border-box;
+  background: none;
 }
