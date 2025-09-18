@@ -8,6 +8,9 @@ import { MdGeneratingTokens } from "react-icons/md";
 
 import { RiNftFill } from "react-icons/ri";
 import { RxActivityLog } from "react-icons/rx";
+import NFTsByWallet from './NFTsByWallet';
+import TokensByWallet from './TokensByWallet';
+import TransactionHistory from './TransactionHistory';
 
 
 type Props = {}
@@ -26,9 +29,7 @@ tokens
 			className='
 		plasmo-flex plasmo-items-center plasmo-gap-2
 		'
-		value="
-		tokens
-		">
+		value="tokens">
 			<MdGeneratingTokens/>
 			
 			Tokens</Tabs.Trigger>
@@ -36,19 +37,17 @@ tokens
 			className='
 		plasmo-flex plasmo-items-center plasmo-gap-2
 		'
-		value="
-		nfts
-		">
+		value="nfts">
 			<RiNftFill/>
 
 			NFTs
 		</Tabs.Trigger>
+
 		<Tabs.Trigger
-		
 		className='
 		plasmo-flex plasmo-items-center plasmo-gap-2
 		'
-		value="settings">
+		value="activity">
 			<RxActivityLog/>
 			Activity
 
@@ -57,15 +56,15 @@ tokens
 
 	<Box pt="3">
 		<Tabs.Content value="tokens">
-			
+		<TokensByWallet/>
 		</Tabs.Content>
 
 		<Tabs.Content value="nfts">
-			<p>NFTs</p>
+		<NFTsByWallet/>
 		</Tabs.Content>
 
-		<Tabs.Content value="settings">
-			<p>Edit your profile or update contact information.</p>
+		<Tabs.Content value="activity">
+			<TransactionHistory/>
 		</Tabs.Content>
 	</Box>
 </Tabs.Root>

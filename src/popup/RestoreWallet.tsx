@@ -30,9 +30,9 @@ function RestoreWallet({}: Props) {
     }
 
 const wallet = ethers.Wallet.fromPhrase(recoveryPhrase);
+setIsValidSeed(true);
 
 console.log('Restored Wallet Details:', wallet);
-setIsValidSeed(true);
 alert("Wallet Recovery is valid, now set the password.");
   }
 
@@ -45,7 +45,6 @@ console.log('Restored Wallet Private Key:', wallet.privateKey);
 
 const encryptedWallet= await wallet.encrypt(password);
 
-alert('Wallet restored successfully!');
 
 const encryptedPassword= bcrypt.hashSync(password, 10);
 
@@ -53,10 +52,10 @@ await saveKey(`keystore-${wallet.address}`, {encryptedWallet, password:encrypted
 
 await saveKey(`session`, {
   encryptedWallet, 
-        account:wallet.address,
-        loggedAt: Date.now(),
-        expiresAt: Date.now() + 2 * 1000 * 60 * 60,
-        approvedOrigins:[],
+  account:wallet.address,
+  loggedAt: Date.now(),
+  expiresAt: Date.now() + 2 * 1000 * 60 * 60,
+  approvedOrigins:[],
 });
 
 
@@ -66,7 +65,8 @@ dispatch(
     'encryptedWallet':encryptedWallet,
   })
 );
-redirect('/restore');
+redirect('/');
+alert('Wallet restored successfully!');
   }
 
 
@@ -98,7 +98,7 @@ className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasm
          hover:plasmo-bg-accent hover hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500
          "
 >
-    Validate
+    Validate Seed
 </button>
       </>
       }
@@ -108,14 +108,14 @@ className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasm
 <>
 <p
 className='plasmo-text-base plasmo-font-semibold plasmo-text-secondary'
->Enter your recovery phrase:</p>
-<TextArea
+>Enter Your Password:</p>
+<input
 onChange={(e) => {
   setPassword(e.target.value);
 }}
-value={recoveryPhrase}
+value={password}
 placeholder='Recovery phrase...'
-className='plasmo-h-24'
+className='plasmo-bg-accent plasmo-border plasmo-border-secondary plasmo-rounded-lg plasmo-p-2 plasmo-text-white'
 />
 
 <button

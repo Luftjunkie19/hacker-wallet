@@ -7,6 +7,7 @@ import RestoreWallet from '~popup/RestoreWallet';
 import UnloggedScreen from '~popup/UnloggedScreen';
 import { loadKey } from '~popup/IndexedDB/walletStorage';
 import { setCurrentWallet } from './slices/LoggedInWallet';
+import TransferScreen from '~popup/LogggedInScreens/TransferScreen';
 
 type Props = {}
 
@@ -41,8 +42,7 @@ function Router({}: Props) {
    <Route path="/create-new" element={<CreateNewWallet />} />
    </> : <>
 <Route path='/' element={<Home/>}/>
-<Route path="/restore" element={<Home/>}/>
-<Route path="create-new" element={<Home/>}/>
+<Route path='/transfer' element={<TransferScreen/>}/>
    </>
   }
 

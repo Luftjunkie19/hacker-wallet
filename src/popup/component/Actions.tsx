@@ -100,7 +100,7 @@ className="plasmo-text-secondary plasmo-self-center
 plasmo-flex plasmo-items-center plasmo-gap-2"
 onClick={
   ()=>{
-    navigator.clipboard.write(publicAddress);
+    navigator.clipboard.writeText(publicAddress);
   }
 }
 >
