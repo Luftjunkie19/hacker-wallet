@@ -3,6 +3,13 @@ import {generateMnemonic, mnemonicToSeedSync} from 'bip39'
 import { Button } from '@radix-ui/themes';
 import {Toast} from 'radix-ui';
 import {ethers} from 'ethers';
+import { useAppDispatch } from './state-managment/ReduxWrapper';
+import { setCurrentWallet } from './state-managment/slices/LoggedInWallet';
+import { redirect } from 'react-router-dom';
+import { FaEye } from 'react-icons/fa';
+import { IoMdEyeOff } from "react-icons/io";
+import bcrypt from 'bcryptjs'
+import { saveKey } from './IndexedDB/walletStorage';
 
 type Props = {}
 
@@ -11,10 +18,13 @@ function CreateNewWallet({}: Props) {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [indicies, setIndices] = useState<Set<number>>(new Set());
   const [mnemonic, setMnemonic] = useState<string>();
-  const [seed, setSeed] = useState<string>(); 
   const [open, setOpen] = useState(false);
   const [inputPhrase, setInputPhrase] = useState<string>('');
+  const [confirmedSeed, setConfirmedSeed]=useState<boolean>();
+  const [password, setPassword]=useState<string>();
+  const [type, setType]=useState<"password" | "text">("password");
 
+  const dispatch = useAppDispatch();
 
 useEffect(() => {
     if(!mnemonic){
@@ -28,8 +38,7 @@ useEffect(() => {
 
 const handleConfirm = () => {
   if (mnemonic) {
-    const seed = mnemonicToSeedSync(mnemonic);
-    setSeed(seed.toString('hex'));
+
     const lengthOfMnemonic = mnemonic.split(' ').length;
     const indiciesToConfirm = new Set<number>();
 
@@ -49,30 +58,95 @@ const handleConfirm = () => {
 };
 
 const handleCheckMnemonicWords=() => {
-        if(mnemonic.split(' ')[currentStep] === inputPhrase.trim()){
-          const nextIndex = Array.from(indicies)[Array.from(indicies).indexOf(currentStep) + 1];
-          if (nextIndex !== undefined) {
-            setCurrentStep(nextIndex);
+  if(Array.from(indicies).indexOf(currentStep) !== indicies.size - 1){
+    if(mnemonic.split(' ')[currentStep] === inputPhrase.trim()){
+            const nextIndex = Array.from(indicies)[Array.from(indicies).indexOf(currentStep) + 1];
+            console.log(nextIndex, "next index");
+            if (nextIndex !== undefined) {
+              setCurrentStep(nextIndex);
+              setInputPhrase('');
+            }
+          } else {
+            alert('Incorrect word, please try again.');
+            // Reset state or proceed to the next step in your app
+            setConfirmInput(false);
+            setIndices(new Set());
+            setCurrentStep(0);
             setInputPhrase('');
           }
-        } else {
-          console.log('Error: No more indices to confirm.');
-          alert('Incorrect word, please try again.');
-          // Reset state or proceed to the next step in your app
-          setConfirmInput(false);
-          setIndices(new Set());
-          setCurrentStep(0);
-          // setMnemonic(undefined); // Optionally generate a new mnemonic
-          setInputPhrase('');
-        }
-        
+    return;
+  }
+
+    
+      alert('Mnemonic confirmed! Your wallet is created.');
+      setConfirmedSeed(true);
 
       };
+
+
+
+const encryptAndLoginWallet= async ()=>{
+    try{
+ if ((ethers).Wallet && (ethers).Wallet.fromPhrase && password.trim().length >= 12) {
+  console.log("Wallet.fromPhrase exists");
+  const hdNode = (ethers).Wallet.fromPhrase(mnemonic);
+      console.log(hdNode);
+      console.log('Wallet Address:', hdNode.address);
+      console.log('Private Key:', hdNode.privateKey);
+      const wallet = new ethers.Wallet(hdNode.privateKey);
+    
+      const encryptedWallet= await hdNode.encrypt(password);
+
+      console.log('encrypted wallet', encryptedWallet);
+
+      console.log('Wallet Details:', wallet);
+
+      const encryptedPassword = bcrypt.hashSync(password,10);
+
+      console.log(encryptedPassword);
+
+      await saveKey(`keystore-${wallet.address}`, {
+        encryptedWallet,
+        password: encryptedPassword
+      });
+
+      await saveKey('session', {
+        encryptedWallet, 
+        account:wallet.address,
+        loggedAt: Date.now(),
+        expiresAt: Date.now() + 2 * 1000 * 60 * 60,
+        approvedOrigins:[],
+      });
+
+      dispatch(setCurrentWallet({
+        'encryptedWallet': encryptedWallet,
+        address: wallet.address,
+      }));
+    
+      redirect('/');
+
+      return; 
+}
+
+throw new Error("Wallet.fromPhrase does not exist");
+
+    }catch(error){
+      console.error('Error creating wallet:', error);
+      alert(`There was an error creating your wallet. Please try again.
+        ${error}
+        `);
+    }
+
+
+
+
+}
+
 
   return (
       <div className='plasmo-flex plasmo-flex-col plasmo-gap-4  plasmo-w-full
       '>
-      {mnemonic && !confirmInput &&
+      {mnemonic && !confirmInput &&  !confirmedSeed &&
       <>
         <p
         className='plasmo-text-white plasmo-text-lg plasmo-font-semibold
@@ -92,7 +166,7 @@ const handleCheckMnemonicWords=() => {
       </div>
       </>}
 
-      {confirmInput && mnemonic && 
+      {confirmInput && mnemonic &&  !confirmedSeed &&
       <div>
         <p
         className='plasmo-text-white plasmo-text-lg plasmo-font-semibold
@@ -116,7 +190,7 @@ value={inputPhrase}
 
 
 {
-      mnemonic && !confirmInput && <>    
+      mnemonic && !confirmInput && !confirmedSeed && <>    
 
 	<Toast.Provider swipeDirection="right">
 
@@ -178,7 +252,7 @@ className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasm
 }
       
 
-      {mnemonic && confirmInput && 
+      {mnemonic && confirmInput && !confirmedSeed &&
       <Button
       className='
       plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasmo-justify-center plasmo-border  plasmo-border-accent
@@ -193,6 +267,55 @@ className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasm
       </Button>
       }
 
+
+{confirmedSeed && <>
+   <div>
+        <p className='plasmo-text-white plasmo-text-lg plasmo-font-semibold'>
+          Set the password for your wallet.
+        </p>
+
+<div className='plasmo-flex plasmo-items-center plasmo-gap-3'>
+<input
+className='plasmo-w-full plasmo-bg-accent plasmo-text-white plasmo-rounded-lg plasmo-px-4 plasmo-py-2'
+type={type}
+placeholder='Type here...'
+onChange={(e) => {
+  setPassword(e.target.value);
+}}
+value={password}
+/>
+
+<button onClick={()=>{
+  if(type==='text') {
+    setType("password");
+    return;
+  }
+  setType('text');
+}}>
+  {type === 'password' ?
+<FaEye className='plasmo-text-secondary plasmo-text-xl'/> : 
+<IoMdEyeOff className='plasmo-text-secondary plasmo-text-xl' />
+
+}
+</button>
+</div>
+       
+      </div>
+
+    <Button
+      className='
+      plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasmo-justify-center plasmo-border  plasmo-border-accent
+      plasmo-font-semibold plasmo-text-sm plasmo-rounded-lg plasmo-px-4 plasmo-py-3 plasmo-text-primary
+      hover:plasmo-border-secondary hover:plasmo-text-white
+      hover:plasmo-bg-accent hover hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500
+      plasmo-w-full plasmo-cursor-pointer
+      '
+      onClick={encryptAndLoginWallet}
+      >
+        Next
+      </Button>
+
+</>}
 
 
 
