@@ -3,6 +3,8 @@ import React from 'react'
 
 import { Provider, useDispatch, useSelector, useStore } from 'react-redux';
 import { walletReducer } from './slices/LoggedInWallet';
+import { networkReducer } from './slices/CurrentWalletNetwork';
+
 
 type Props = {
     children: React.ReactNode
@@ -11,6 +13,7 @@ type Props = {
 export const store = configureStore({
     reducer:{
         loggedIn: walletReducer,
+        currentNetworkConnected: networkReducer,
     }
 });
 

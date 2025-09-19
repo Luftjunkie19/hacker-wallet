@@ -1,53 +1,139 @@
 import { DropdownMenu } from 'radix-ui';
 import React from 'react'
-import {FaGlobe} from "react-icons/fa";
-import { useAppSelector } from '~popup/state-managment/ReduxWrapper';
+import { IoGitNetworkSharp } from "react-icons/io5";
+import {FaEthereum, FaExternalLinkAlt} from "react-icons/fa";
+import { FaGear } from "react-icons/fa6";
+import { RiGitRepositoryPrivateFill } from "react-icons/ri";
+import { useAppDispatch, useAppSelector } from '~popup/state-managment/ReduxWrapper';
+import { IoMdAddCircle } from 'react-icons/io';
+import { redirect } from 'react-router-dom';
 type Props = {}
 
 function Header({}: Props) {
-    const isLoggedIn= useAppSelector((selector)=>selector.loggedIn.encryptedWallet)
+    const isLoggedIn= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
+    const dispatch=useAppDispatch();
+
+
+    const networksArray=[
+      {
+    chainId:11155111,
+    blockExplorerURL:'https://sepolia.etherscan.io',
+    networkName:'Ethereum Sepolia',
+    rpcURL:`https://eth-sepolia.g.alchemy.com/v2/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}`,
+    currencySymbol:'SepoliaETH',
+    networkAlchemyId:'sepolia-eth'
+},
+{
+   chainId:17000,
+    blockExplorerURL:'https://holesky.etherscan.io',
+    networkName:'Ethereum Holesky',
+    rpcURL:`https://eth-holesky.g.alchemy.com/v2/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}`,
+    currencySymbol:'ETH',
+    networkAlchemyId:'holesky-eth'
+}
+    ];
+
 
     return (
-    <div className="plasmo-gap-12 plasmo-flex 
-   plasmo-justify-between
+    <div className="plasmo-gap-24 plasmo-flex 
+   plasmo-justify-between plasmo-w-full
     plasmo-items-center">
-           <div className="self-center
-           plasmo-flex plasmo-gap-2 plasmo-items-center
+           <div
+           onClick={()=>{
+            redirect('/');
+           }}
+           className="self-center
+           plasmo-flex plasmo-gap-2 plasmo-items-center plasmo-cursor-pointer
            ">
-              <img src={require('../icon.png')} width={56}height={56}className="plasmo-w-14 plasmo-h-14 plasmo-rounded-lg" alt="HackerWallet Logo" />
-        <p className="plasmo-text-xl plasmo-text-center plasmo-font-bold plasmo-text-secondary">
+              <img src={require('../icon.png')} width={56}height={56}className="plasmo-w-12 plasmo-h-12 plasmo-rounded-lg" alt="HackerWallet Logo" />
+        <p className="plasmo-text-lg plasmo-text-center plasmo-font-bold plasmo-text-secondary">
         HackerWallet
       </p>
       </div>
 
       {
 isLoggedIn &&
-      <div className="plasmo-flex plasmo-gap-4">
+      <div className="plasmo-flex plasmo-outline-none plasmo-gap-4">
 
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger>
 	<button>
-    <FaGlobe
+    <IoGitNetworkSharp
     className='
     plasmo-text-secondary
+    plasmo-text-2xl
     '
     />
 </button>
 
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content className='plasmo-bg-accent plasmo-text-white plasmo-p-2 plasmo-rounded-lg plasmo-border plasmo-border-secondary'>
-		<DropdownMenu.Item >Edit</DropdownMenu.Item>
-		<DropdownMenu.Item >Duplicate</DropdownMenu.Item>
+	<DropdownMenu.Content className='plasmo-bg-accent plasmo-mr-16 plasmo-mt-6 plasmo-h-64 plasmo-overflow-auto plasmo-max-w-52 plasmo-w-full plasmo-flex plasmo-flex-col plasmo-gap-2
+  plasmo-justify-between
+  plasmo-text-white plasmo-p-3 plasmo-rounded-lg plasmo-border plasmo-border-secondary'>
+	
+  <div className="
+  plasmo-flex plasmo-flex-col plasmo-gap-2
+  ">
+  	<DropdownMenu.Item className='plasmo-flex plasmo-outline-none plasmo-items-center plasmo-cursor-pointer plasmo-gap-2
+     hover:plasmo-text-secondary plasmo-transition-all hover:plasmo-scale-95
+    '>
+               <FaEthereum />   Sepolia Ethereum
+            </DropdownMenu.Item>
 		<DropdownMenu.Separator />
-		<DropdownMenu.Item>Archive</DropdownMenu.Item>
+		<DropdownMenu.Item className='plasmo-flex plasmo-items-center plasmo-outline-none plasmo-cursor-pointer plasmo-gap-2
+    hover:plasmo-text-secondary plasmo-transition-all hover:plasmo-scale-95
+    '>
+                   <FaEthereum />     Holesky Ethereum
+            </DropdownMenu.Item>
+  </div>
 
+		
+
+		<DropdownMenu.Item className='plasmo-outline-none plasmo-cursor-pointer plasmo-text-white
+    plasmo-flex plasmo-gap-2 plasmo-items-center hover:plasmo-text-secondary plasmo-transition-all
+    hover:plasmo-scale-95
+    '>
+      <IoMdAddCircle
+      className='
+      plasmo-text-2xl
+      '
+      />
+                 Add New Network
+            </DropdownMenu.Item>
+	</DropdownMenu.Content>
+</DropdownMenu.Root>
+
+
+
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger>
+	<button>
+    <FaGear
+    className='
+    plasmo-text-secondary
+    plasmo-text-2xl
+    '
+    />
+</button>
+
+	</DropdownMenu.Trigger>
+	<DropdownMenu.Content className='plasmo-bg-accent plasmo-mr-16 plasmo-mt-6 plasmo-h-64 plasmo-overflow-auto plasmo-max-w-52 plasmo-w-full plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-text-white plasmo-p-3 plasmo-rounded-lg plasmo-border plasmo-border-secondary'>
+		<DropdownMenu.Item className='plasmo-flex plasmo-outline-none plasmo-items-center plasmo-cursor-pointer plasmo-gap-2
+     hover:plasmo-text-secondary plasmo-transition-all
+    hover:plasmo-scale-95
+    '>
+    <RiGitRepositoryPrivateFill />    Reveal Private Key
+            </DropdownMenu.Item>
 		<DropdownMenu.Separator />
-		<DropdownMenu.Item>Share</DropdownMenu.Item>
-		<DropdownMenu.Item>Logout</DropdownMenu.Item>
-		<DropdownMenu.Separator />
-		<DropdownMenu.Item color="red">
-			Delete
-		</DropdownMenu.Item>
+		<DropdownMenu.Item className='plasmo-flex plasmo-items-center plasmo-outline-none plasmo-cursor-pointer
+     hover:plasmo-text-secondary plasmo-transition-all
+    hover:plasmo-scale-95
+    plasmo-gap-2'>
+      <FaExternalLinkAlt/>
+              Network's Explorer
+            </DropdownMenu.Item>
+
+		
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 

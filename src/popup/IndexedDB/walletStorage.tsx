@@ -25,3 +25,5 @@ export const deleteKey= async(key:string)=>{
     const database = await db();
     return database.delete('current_wallet', key);
 }
+
+

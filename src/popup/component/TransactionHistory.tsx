@@ -13,7 +13,7 @@ function TransactionHistory({}: Props) {
                 return;
               }
         
-          const url = `https://api.g.alchemy.com/data/v1/${process.env.PLASMO_ALCHEMY_API_KEY}/transactions/history/by-address`;
+          const url = `https://api.g.alchemy.com/data/v1/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}/transactions/history/by-address`;
 const options = {
   method: 'POST',
   headers: {'Content-Type': 'application/json'},

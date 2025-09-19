@@ -1,5 +1,6 @@
 import React from 'react'
 import Actions from '~popup/component/Actions'
+import NativeTokenAmount from '~popup/component/NativeTokenAmount'
 import WalletTabs from '~popup/component/WalletTabs'
 
 type Props = {}
@@ -10,13 +11,7 @@ function Home({}: Props) {
     className=' plasmo-h-full plasmo-w-full plasmo-p-3
     '>
 
-<p
-className='
-plasmo-text-secondary plasmo-text-3xl plasmo-font-bold
-'
->
-    100.00$
-</p>
+<NativeTokenAmount/>
 
 <Actions/>
 
