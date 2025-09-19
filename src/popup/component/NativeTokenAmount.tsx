@@ -36,7 +36,7 @@ function NativeTokenAmount({}: Props) {
 
   return (
     <div className='plasmo-flex plasmo-gap-2 plasmo-items-center plasmo-text-white'>
-        {publicAddress && amount && <p className='plasmo-font-bold plasmo-text-2xl'>{Number(amount).toFixed(2)}</p>}
+        {publicAddress && amount && <p className='plasmo-font-bold plasmo-text-2xl'>{Number(amount).toFixed(5)}</p>}
         <p className='plasmo-text-secondary plasmo-font-bold plasmo-text-2xl'>{currentNetworkNativeTokenSymbol}</p>
     </div>
   )

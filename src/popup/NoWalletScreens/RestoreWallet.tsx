@@ -2,9 +2,10 @@ import {  TextArea } from '@radix-ui/themes'
 import { ethers } from 'ethers';
 import React, { useState } from 'react'
 import { redirect } from 'react-router-dom';
-import { useAppDispatch } from './state-managment/ReduxWrapper';
-import { setCurrentWallet } from './state-managment/slices/LoggedInWallet';
-import { saveKey } from './IndexedDB/walletStorage';
+import { useAppDispatch } from '../state-managment/ReduxWrapper';
+import { setCurrentWallet } from '../state-managment/slices/LoggedInWallet';
+import { saveKey } from '../IndexedDB/walletStorage';
+import {saveKey as saveSession} from '../IndexedDB/sessionStorage';
 import bcrypt from 'bcryptjs';
 
 type Props = {}
@@ -50,19 +51,20 @@ const encryptedPassword= bcrypt.hashSync(password, 10);
 
 await saveKey(`keystore-${wallet.address}`, {encryptedWallet, password:encryptedPassword});
 
-await saveKey(`session`, {
-  encryptedWallet, 
-  account:wallet.address,
-  loggedAt: Date.now(),
-  expiresAt: Date.now() + 2 * 1000 * 60 * 60,
-  approvedOrigins:[],
-});
-
+  await saveSession('session', {
+        encryptedWallet, 
+        account:wallet.address,
+        loggedAt: Date.now(),
+        expiresAt: Date.now() + 2 * 1000 * 60 * 60,
+        approvedOrigins:[],
+        password: encryptedPassword,
+      });
 
 dispatch(
   setCurrentWallet({
     'address': wallet.address,
     'encryptedWallet':encryptedWallet,
+    password: encryptedPassword,
   })
 );
 redirect('/');

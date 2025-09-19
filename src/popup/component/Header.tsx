@@ -1,12 +1,13 @@
 import { DropdownMenu } from 'radix-ui';
 import React from 'react'
-import { IoGitNetworkSharp } from "react-icons/io5";
+import { IoGitNetworkSharp, IoLogOut } from "react-icons/io5";
 import {FaEthereum, FaExternalLinkAlt} from "react-icons/fa";
 import { FaGear } from "react-icons/fa6";
 import { RiGitRepositoryPrivateFill } from "react-icons/ri";
 import { useAppDispatch, useAppSelector } from '~popup/state-managment/ReduxWrapper';
 import { IoMdAddCircle } from 'react-icons/io';
 import { redirect } from 'react-router-dom';
+import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/walletStorage';
 type Props = {}
 
 function Header({}: Props) {
@@ -32,6 +33,11 @@ function Header({}: Props) {
     networkAlchemyId:'holesky-eth'
 }
     ];
+
+    const logoutFromWallet=  ()=>{
+ fetchContainingKeywordElements();
+
+    }
 
 
     return (
@@ -117,8 +123,9 @@ isLoggedIn &&
 </button>
 
 	</DropdownMenu.Trigger>
-	<DropdownMenu.Content className='plasmo-bg-accent plasmo-mr-16 plasmo-mt-6 plasmo-h-64 plasmo-overflow-auto plasmo-max-w-52 plasmo-w-full plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-text-white plasmo-p-3 plasmo-rounded-lg plasmo-border plasmo-border-secondary'>
-		<DropdownMenu.Item className='plasmo-flex plasmo-outline-none plasmo-items-center plasmo-cursor-pointer plasmo-gap-2
+	<DropdownMenu.Content className='plasmo-bg-accent plasmo-justify-between plasmo-mr-16 plasmo-mt-6 plasmo-h-64 plasmo-overflow-auto plasmo-max-w-52 plasmo-w-full plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-text-white plasmo-p-3 plasmo-rounded-lg plasmo-border plasmo-border-secondary'>
+	<div className="plasmo-flex plasmo-flex-col plasmo-gap-3">
+    	<DropdownMenu.Item className='plasmo-flex plasmo-outline-none plasmo-items-center plasmo-cursor-pointer plasmo-gap-2
      hover:plasmo-text-secondary plasmo-transition-all
     hover:plasmo-scale-95
     '>
@@ -132,7 +139,17 @@ isLoggedIn &&
       <FaExternalLinkAlt/>
               Network's Explorer
             </DropdownMenu.Item>
+  </div>
 
+
+		<DropdownMenu.Item
+    onClick={logoutFromWallet}
+    className='plasmo-flex plasmo-outline-none plasmo-items-center plasmo-cursor-pointer plasmo-gap-2
+     hover:plasmo-text-red-500 plasmo-transition-all
+    hover:plasmo-scale-95
+    '>
+    <IoLogOut />   Logout
+            </DropdownMenu.Item>
 		
 	</DropdownMenu.Content>
 </DropdownMenu.Root>

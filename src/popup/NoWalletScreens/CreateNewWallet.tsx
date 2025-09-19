@@ -3,13 +3,14 @@ import {generateMnemonic, mnemonicToSeedSync} from 'bip39'
 import { Button } from '@radix-ui/themes';
 import {Toast} from 'radix-ui';
 import {ethers} from 'ethers';
-import { useAppDispatch } from './state-managment/ReduxWrapper';
-import { setCurrentWallet } from './state-managment/slices/LoggedInWallet';
+import { useAppDispatch } from '../state-managment/ReduxWrapper';
+import { setCurrentWallet } from '../state-managment/slices/LoggedInWallet';
 import { redirect } from 'react-router-dom';
 import { FaEye } from 'react-icons/fa';
 import { IoMdEyeOff } from "react-icons/io";
 import bcrypt from 'bcryptjs'
-import { saveKey } from './IndexedDB/walletStorage';
+import { saveKey } from '../IndexedDB/walletStorage';
+import { saveKey as saveSession } from '../IndexedDB/sessionStorage';
 
 type Props = {}
 
@@ -110,17 +111,19 @@ const encryptAndLoginWallet= async ()=>{
         password: encryptedPassword
       });
 
-      await saveKey('session', {
+      await saveSession('session', {
         encryptedWallet, 
         account:wallet.address,
         loggedAt: Date.now(),
         expiresAt: Date.now() + 2 * 1000 * 60 * 60,
         approvedOrigins:[],
+        password: encryptedPassword,
       });
 
       dispatch(setCurrentWallet({
         'encryptedWallet': encryptedWallet,
         address: wallet.address,
+        password: encryptedPassword,
       }));
     
       redirect('/');

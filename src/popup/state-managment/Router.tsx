@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from './ReduxWrapper';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import CreateNewWallet from '~popup/CreateNewWallet';
+import CreateNewWallet from '~popup/NoWalletScreens/CreateNewWallet';
 import Home from '~popup/LogggedInScreens/Home';
-import RestoreWallet from '~popup/RestoreWallet';
+import RestoreWallet from '../NoWalletScreens/RestoreWallet';
 import UnloggedScreen from '~popup/UnloggedScreen';
-import { loadKey } from '~popup/IndexedDB/walletStorage';
+import { loadKey } from '~popup/IndexedDB/sessionStorage';
 import { setCurrentWallet } from './slices/LoggedInWallet';
 import TransferScreen from '~popup/LogggedInScreens/TransferScreen';
 
@@ -20,7 +20,9 @@ function Router({}: Props) {
     const loadedDb= await loadKey(`session`);
     console.log(loadedDb);
 
-    if(typeof loadedDb !== 'undefined') dispatch(setCurrentWallet({'address':loadedDb.account, 'encryptedWallet':loadedDb.encryptedWallet}));
+    if(typeof loadedDb !== 'undefined') dispatch(setCurrentWallet({'address':loadedDb.account, 'encryptedWallet':loadedDb.encryptedWallet,
+      password: loadedDb.password,
+    }));
     
   },[]);
 
