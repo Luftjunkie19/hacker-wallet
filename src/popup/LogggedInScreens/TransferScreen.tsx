@@ -5,13 +5,18 @@ import { RiTokenSwapFill } from 'react-icons/ri';
 import useFetchTokensData from '~popup/hooks/useFetchTokensData';
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper'
 import * as z from 'zod';
-import {useForm} from 'react-hook-form';
-type Props = {}
-import {zodResolver} from "@hookform/resolvers/zod";
+import  bcrypt  from 'bcryptjs';
 
-function TransferScreen({}: Props) {
+
+function TransferScreen() {
   const publicAddress= useAppSelector((state)=>state.loggedIn.address);
+  const encryptedPrivatKey= useAppSelector((state)=>state.loggedIn.encryptedWallet);
+  const currentNetworkNativeTokenSymbol= useAppSelector((state)=>state.currentNetworkConnected.currencySymbol);
+  const currentNetworkChainID= useAppSelector((state)=>state.currentNetworkConnected.chainId);
+  const rpcURL=useAppSelector((state)=>state.currentNetworkConnected.rpcURL);
   const {tokens}=useFetchTokensData();
+  const [amountToSend, setAmountToSend]=useState<number>();
+  const [destinationAddress, setDestinationAddress]=useState<`0x${string}`>();
 
   const validationObject=z.object({
     amountToBeSent: z.number().positive(),
@@ -20,27 +25,42 @@ function TransferScreen({}: Props) {
     nftsID: z.number().positive(),
   })
 
-  const {
-    register,
-    reset,
-  watch,
-  handleSubmit
-  }=useForm(
-    {
-resolver:zodResolver(validationObject)
-    }
-  )
-
 
 
   const handleTxaction =async ()=>{
-    const provider = new ethers.AlchemyProvider('homestead', process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY);
-  
-    const res = await provider.estimateGas({
-      to:'',
-      from:publicAddress,
-      value:ethers.parseEther(`${amountToSend}`),
-    })
+
+    if(destinationAddress.length !== 42){
+      alert('Invalid Destination Address');
+      return;
+    }
+    
+    const provider = new ethers.JsonRpcProvider(rpcURL);
+    const wallet = await ethers.Wallet.fromEncryptedJson(encryptedPrivatKey,"[password]");
+
+    const walletDecrypted = new ethers.Wallet(wallet.privateKey, provider);
+
+    console.log(
+      wallet
+    );
+
+    const tx= 
+    await walletDecrypted.sendTransaction({
+  from:publicAddress,
+  to: destinationAddress,
+  value:BigInt(amountToSend * (10**18)),
+  'chainId': currentNetworkChainID,  
+    });
+
+    console.log(
+      tx
+    );
+
+    const receiptTx= await tx.wait();
+
+    console.log(receiptTx);
+
+
+    
   };
 
 
@@ -50,6 +70,7 @@ resolver:zodResolver(validationObject)
     className='
     plasmo-w-full
     plasmo-flex plasmo-flex-col plasmo-gap-4
+    plasmo-h-full
     '
     >
   <div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
@@ -75,10 +96,10 @@ resolver:zodResolver(validationObject)
   <input
   step="0.001"
   min={0}
-type='number'
   onChange={(e)=>{
-    setAmountToSend(Number(e.target.value));
+setAmountToSend(+e.target.value);
   }}
+type='number'
   placeholder='Amount to be sent'
   className='plasmo-bg-accent
   plasmo-w-full
@@ -96,37 +117,45 @@ type='number'
 	<DropdownMenu.Content
   className='
   plasmo-mr-20 plasmo-bg-accent plasmo-border plasmo-border-secondary
-  plasmo-text-white plasmo-mt-6 plasmo-p-2 plasmo-rounded-lg
+  plasmo-text-white plasmo-mt-4 plasmo-p-2 plasmo-rounded-lg
   plasmo-max-w-56 plasmo-w-full plasmo-h-52 plasmo-overflow-y-auto
+  plasmo-flex plasmo-flex-col plasmo-gap-3
   '
   >
 		{
       tokens.map((element)=>(
         		<DropdownMenu.Item
             className='
-            plasmo-text-white
+            plasmo-text-white plasmo-flex plasmo-items-center plasmo-gap-2
+            plasmo-cursor-pointer
             '
-            onClick={()=>{
-
-              if(element.tokenAddress !== null){
-              setTokenToBeSent(
-                element.tokenAddress
-              );
-              return;
-              }
-
-              setTokenToBeSent(
-                `0x0000000000000000000000000000000000000000`
-              );
-
-            }}
             >
 
+<p
+className='
+plasmo-font-semibold
+'
+>
 {
-  JSON.stringify(
-    element
-  )
+(Number(
+  element.tokenBalance
+) / 10 ** (element.tokenMetadata.decimals
+ ?? 18
+)).toFixed(4)
 }
+</p>
+
+<span
+className='
+plasmo-text-secondary plasmo-font-bold
+'
+>
+{element.tokenMetadata.symbol ??
+currentNetworkNativeTokenSymbol
+}
+</span>
+
+
 
             </DropdownMenu.Item>
       ))
@@ -138,9 +167,38 @@ type='number'
 </div>
 
   <div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
+<p
+className='
+plasmo-text-white plasmo-font-semibold plasmo-text-lg
+'
+>To </p>
+
+  <input
+  onChange={(e)=>{
+      setDestinationAddress(e.target.value as `0x${string}`);
+  }}
+  type='text'
+  placeholder='Destination/Receiver Address'
+  className='plasmo-bg-accent
+  plasmo-w-full
+  plasmo-p-2 plasmo-rounded-lg plasmo-border plasmo-border-secondary plasmo-text-white'/>
+
 
   </div>
 
+
+<button
+className='
+plasmo-bg-secondary plasmo-border-accent plasmo-p-2 plasmo-rounded-lg plasmo-text-accent
+hover:plasmo-bg-accent hover:plasmo-text-secondary plasmo-transition-all hover:plasmo-border-secondary
+hover:plasmo-scale-95
+'
+onClick={
+  handleTxaction
+}
+>
+Send Transaction
+</button>
       
     </div>
   )
