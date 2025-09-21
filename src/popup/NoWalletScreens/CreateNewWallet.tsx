@@ -9,8 +9,7 @@ import { redirect } from 'react-router-dom';
 import { FaEye } from 'react-icons/fa';
 import { IoMdEyeOff } from "react-icons/io";
 import bcrypt from 'bcryptjs'
-import { saveKey } from '../IndexedDB/walletStorage';
-import { saveKey as saveSession } from '../IndexedDB/sessionStorage';
+import { saveKey } from '../IndexedDB/WalletDataStorage';
 
 type Props = {}
 
@@ -111,7 +110,7 @@ const encryptAndLoginWallet= async ()=>{
         password: encryptedPassword
       });
 
-      await saveSession('session', {
+      await saveKey('session', {
         encryptedWallet, 
         account:wallet.address,
         loggedAt: Date.now(),

@@ -7,11 +7,13 @@ import { RiGitRepositoryPrivateFill } from "react-icons/ri";
 import { useAppDispatch, useAppSelector } from '~popup/state-managment/ReduxWrapper';
 import { IoMdAddCircle } from 'react-icons/io';
 import { redirect } from 'react-router-dom';
-import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/walletStorage';
+import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/WalletDataStorage';
+import { setCurrentNetwork } from '~popup/state-managment/slices/CurrentWalletNetwork';
 type Props = {}
 
 function Header({}: Props) {
     const isLoggedIn= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
+    const currentChain=useAppSelector((selector)=>selector.currentNetworkConnected.networkAlchemyId);
     const dispatch=useAppDispatch();
 
 
@@ -34,8 +36,8 @@ function Header({}: Props) {
 }
     ];
 
-    const logoutFromWallet=  ()=>{
- fetchContainingKeywordElements();
+    const logoutFromWallet= async ()=>{
+await deleteKey('session');
 
     }
 
@@ -80,17 +82,24 @@ isLoggedIn &&
   <div className="
   plasmo-flex plasmo-flex-col plasmo-gap-2
   ">
-  	<DropdownMenu.Item className='plasmo-flex plasmo-outline-none plasmo-items-center plasmo-cursor-pointer plasmo-gap-2
-     hover:plasmo-text-secondary plasmo-transition-all hover:plasmo-scale-95
-    '>
-               <FaEthereum />   Sepolia Ethereum
+{networksArray.map((network)=>(
+    	<DropdownMenu.Item onClick={()=>{
+        dispatch(setCurrentNetwork({
+          'blockExplorerURL':network.blockExplorerURL, 
+          'chainId':network.chainId,
+          'currencySymbol':network.currencySymbol,
+          'networkAlchemyId':network.networkAlchemyId,
+          'networkName':network.networkName,
+          rpcURL:network.rpcURL
+        }));
+
+
+      }} className={`plasmo-flex plasmo-outline-none plasmo-items-center plasmo-cursor-pointer plasmo-gap-2
+      plasmo-transition-all hover:plasmo-scale-95 ${network.networkAlchemyId === currentChain ? 'plasmo-bg-secondary plasmo-text-accent plasmo-p-1 plasmo-rounded-lg hover:plasmo-text-secondary hover:plasmo-bg-primary' : 'hover:plasmo-text-secondary' }`}>
+               <FaEthereum />   {network.networkName}
             </DropdownMenu.Item>
-		<DropdownMenu.Separator />
-		<DropdownMenu.Item className='plasmo-flex plasmo-items-center plasmo-outline-none plasmo-cursor-pointer plasmo-gap-2
-    hover:plasmo-text-secondary plasmo-transition-all hover:plasmo-scale-95
-    '>
-                   <FaEthereum />     Holesky Ethereum
-            </DropdownMenu.Item>
+))}
+
   </div>
 
 		

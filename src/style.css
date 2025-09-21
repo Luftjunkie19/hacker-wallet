@@ -11,3 +11,8 @@
   box-sizing: border-box;
   background: none;
 }
+
+
+div::-webkit-scrollbar{
+  display: none;
+}

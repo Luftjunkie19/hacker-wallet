@@ -142,8 +142,6 @@ alert('Wrong password to validate the transaction !');
       
   };
 
-  const getTxGasLimits= ()=>{}
-
   
   return (
     <div
@@ -216,12 +214,12 @@ type='number'
   '
   >
 		{
-      tokens.map((element)=>(
-        		<DropdownMenu.Item
+      tokens.map((element, index)=>(
+                		<DropdownMenu.Item
+                    id={element.tokenMetadata.address}
             className='
             plasmo-text-white plasmo-flex plasmo-items-center plasmo-gap-2
-            plasmo-cursor-pointer
-            '
+            plasmo-cursor-pointer'
             >
 
 <p

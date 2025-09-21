@@ -4,12 +4,12 @@ import { MdCancel } from 'react-icons/md';
 
 
 
-function Modal({children}:{children:React.ReactNode}) {
+function Modal({children, title}:{children:React.ReactNode, title:string}) {
 const [isModalOpen, setIsModalOpen]=useState<boolean>();
 
     return (
     <div className='plasmo-flex plasmo-gap-2 plasmo-p-2 plasmo-w-full plasmo-justify-between plasmo-items-center'>
-    <p className='plasmo-text-white'>Load ERC721 Tokens</p>
+    <p className='plasmo-text-white'>{title}</p>
 
     <button className='plasmo-text-secondary hover:plasmo-text-white' onClick={()=>setIsModalOpen(true)}>
         <FaPlusCircle/>

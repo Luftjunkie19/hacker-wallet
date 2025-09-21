@@ -5,7 +5,7 @@ import CreateNewWallet from '~popup/NoWalletScreens/CreateNewWallet';
 import Home from '~popup/LogggedInScreens/Home';
 import RestoreWallet from '../NoWalletScreens/RestoreWallet';
 import UnloggedScreen from '~popup/UnloggedScreen';
-import { loadKey } from '~popup/IndexedDB/sessionStorage';
+import { loadKey } from '~popup/IndexedDB/WalletDataStorage';
 import { setCurrentWallet } from './slices/LoggedInWallet';
 import TransferScreen from '~popup/LogggedInScreens/TransferScreen';
 

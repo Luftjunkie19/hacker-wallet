@@ -8,7 +8,7 @@ type Props = {}
 function Home({}: Props) {
   return (
     <div
-    className=' plasmo-h-full plasmo-w-full plasmo-p-3
+    className=' plasmo-h-full plasmo-w-full plasmo-overflow-y-hidden plasmo-bg-primary plasmo-p-3
     '>
 
 <NativeTokenAmount/>
