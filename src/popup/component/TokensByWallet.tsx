@@ -6,14 +6,22 @@ import useFetchTokensData from '~popup/hooks/useFetchTokensData';
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper';
 import Modal from './modals/Modal';
 import { ethers } from 'ethers';
+import { saveKey } from '~popup/IndexedDB/WalletDataStorage';
+import { erc20Abi } from '~popup/abis/ERC20';
+import bcrypt from 'bcryptjs';
 
 type Props = {}
 
 function TokensByWallet({}: Props) {
     const publicAddress=useAppSelector((state)=>state.loggedIn.address);
+    const [tokenAddress, setTokenAddress]=useState<`0x${string}`>();
+    const [password, setPassword]=useState<string>();
+    const accountPassword =useAppSelector((state)=>state.loggedIn.password);
+    const encryptedPrivateKey=useAppSelector((state)=>state.loggedIn.encryptedWallet);
+    const rpcURL=useAppSelector((state)=>state.currentNetworkConnected.rpcURL);
     const {tokens,isLoading}=useFetchTokensData();
 
-const handleLoadCheckOwnership= async ()=>{
+const handleUploadERC20Token = async ()=>{
 
       try {
         if(tokenAddress.length !== 42 || !tokenAddress.startsWith('0x')){
@@ -35,42 +43,25 @@ const handleLoadCheckOwnership= async ()=>{
           return;
         }
 
-
         const wallet= ethers.Wallet.fromEncryptedJsonSync(encryptedPrivateKey as string, password);
 
         const decryptedWallet = new ethers.Wallet(wallet.privateKey, provider);
 
-        const nftTokenAbiInterface= new ethers.Interface(erc721Abi);
+        const erc20AbiInterface = new ethers.Interface(erc20Abi);
 
-        const contract= new ethers.Contract(tokenAddress, nftTokenAbiInterface, decryptedWallet);
+        const contract= new ethers.Contract(tokenAddress, erc20AbiInterface , decryptedWallet);
 
-
-        const ownerOf = await contract.ownerOf(tokenId);
-        
-        if(ownerOf !== publicAddress){
-          alert("You are not the owner !");
+        if(!contract){
+          alert('Sorry Bro, such contract does not exist !');
           return;
         }
 
-        console.log(ownerOf, tokenURI);
-
-        const fetchOfObject= await fetch(`${(tokenURI as string).replace('ipfs://', 'https://dweb.link/ipfs/')}`);
-
-        const fetchData = await fetchOfObject.json();
-
-
         await saveKey(`erc20-${tokenAddress}`,{
-          description:fetchData.description,
-          image:fetchData.image,
-          tokenName:fetchData.name,
-          tokenId,
-          chainId, 
-          currentNetworkAlchemyId,
-          nftAddress:tokenAddress
+          tokenAddress
         });
 
-        alert('Congratulations, you have successfully, imported your NFT !')
-import { bcrypt } from 'bcryptjs';
+        alert('Congratulations, you have successfully, imported your ERC20 !')
+
 
       } catch (error) {
         alert(error);

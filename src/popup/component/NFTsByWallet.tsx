@@ -194,19 +194,19 @@ className='plasmo-bg-secondary plasmo-self-center plasmo-w-full plasmo-mt-6 plas
   </div>
 </Modal>
 {publicAddress && ((nftElements &&  nftElements.length > 0) || importedNfts.length > 0) &&
-<div className='plasmo-h-64 plasmo-w-full plasmo-overflow-y-auto'>
+<div className='plasmo-h-64 plasmo-w-full plasmo-overflow-y-auto plasmo-grid plasmo-grid-cols-3 plasmo-gap-4'>
 
   {publicAddress && nftElements && nftElements.length > 0 &&
-    <div className='plasmo-grid plasmo-grid-cols-3 plasmo-gap-4 '> 
+    <> 
     {nftElements.map((element, index)=>(<div>
       <p className='plasmo-text-secondary'>{JSON.stringify(element)}</p>
     </div>))}
-  </div>
+  </>
     }
 
 
     {publicAddress && importedNfts && importedNfts.length > 0 && 
-     <div className='plasmo-grid plasmo-grid-cols-3 plasmo-gap-4'> 
+     <> 
     {importedNfts.map((element, index)=>(<div className='plasmo-w-28 plasmo-relative plasmo-top-0 plasmo-left-0 plasmo-h-28 plasmo-rounded-lg'>
       <img src={`${element.image}`} height={64} width={64} className='plasmo-w-full plasmo-rounded-lg plasmo-h-full'/>
 
@@ -214,7 +214,7 @@ className='plasmo-bg-secondary plasmo-self-center plasmo-w-full plasmo-mt-6 plas
         <p className='plasmo-text-secondary plasmo-text-xs'>{element.tokenName}</p>
       </div>
     </div>))}
-  </div>
+  </>
     }
 </div>
 }

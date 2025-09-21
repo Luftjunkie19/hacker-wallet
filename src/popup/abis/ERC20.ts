@@ -50,33 +50,13 @@ export const erc20Abi=[
     "stateMutability": "view",
     "type": "function"
   },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "_from",
-        "type": "address"
-      },
-      {
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "name": "_value",
-        "type": "uint256"
-      }
-    ],
-    "name": "transferFrom",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
+ {"type":"function",
+  "name":"transferFrom",
+  "inputs":[{"name":"from","type":"address","internalType":"address"},
+    {"name":"to","type":"address","internalType":"address"},{
+      "name":"amount","type":"uint256","internalType":"uint256"}],
+      "outputs":[{"name":"success","type":"bool","internalType":"bool"}],
+ "stateMutability":"nonpayable"},
   {
     "constant": true,
     "inputs": [],
@@ -124,29 +104,7 @@ export const erc20Abi=[
     "stateMutability": "view",
     "type": "function"
   },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "name": "_value",
-        "type": "uint256"
-      }
-    ],
-    "name": "transfer",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
+   {"type":"function","name":"transfer","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"amount","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},
   {
     "constant": true,
     "inputs": [
