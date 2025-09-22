@@ -11,6 +11,9 @@ import { saveKey, fetchContainingKeywordElements} from '~popup/IndexedDB/WalletD
 import bcrypt from 'bcryptjs';
 import { IoEyeOff } from 'react-icons/io5';
 import { FaEye } from 'react-icons/fa';
+import ImportedNFT from './elements/NftElements/Home/ImportedNFT';
+import NoNFTs from './elements/NftElements/Home/NoNFTs';
+import LoadYourNFTModal from './elements/NftElements/Home/LoadYourNFTModal';
 type Props = {}
 
 function NFTsByWallet({}: Props) {
@@ -113,86 +116,11 @@ useEffect(()=>{
 
   return (
     <>
-<Modal title='Load Your NFT (ERC721)'>
-  <div className='plasmo-flex plasmo-flex-col plasmo-h-full plasmo-gap-3 plasmo-p-2'>
-{!nextStep &&
-<>
-<div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
-  <p className='plasmo-text-white'>Token Address</p>
-  <input
-onChange={(e) => {
-  setTokenAddress(e.target.value as `0xstring`);
-}}
-value={tokenAddress}
-placeholder='Token Address...'
-className='plasmo-bg-accent plasmo-border plasmo-border-secondary plasmo-rounded-lg plasmo-p-2 plasmo-text-white'
+<LoadYourNFTModal nextStep={nextStep} setTokenAddress={setTokenAddress} tokenAddress={tokenAddress} 
+setTokenId={setTokenId} setNextStep={setNextStep} password={password} setPassword={setPassword} 
+inputType={inputType} setInputType={setInputType} handleLoadCheckOwnership={handleLoadCheckOwnership}
+
 />
-</div>
-
-
-<div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
-  <p className='plasmo-text-white'>Token Id</p>
-  <input
-  type='number'
-onChange={(e) => {
-  setTokenId(BigInt(+e.target.value));
-}}
-step={1}
-min={1}
-placeholder='Token ID...'
-className='plasmo-bg-accent plasmo-border plasmo-border-secondary plasmo-rounded-lg plasmo-p-2 plasmo-text-white'
-/>
-
-
-
-</div>
-
-<button 
-onClick={()=>setNextStep(true)}
-className='plasmo-bg-secondary plasmo-mt-6 plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo-border-secondary plasmo-text-accent hover:plasmo-bg-accent hover:plasmo-text-secondary hover:plasmo-scale-95 plasmo-transition-all'
-
->Confirm</button>
-</>
-}
-
-{nextStep && <>
-<div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
- 
- <div className="plasmo-flex plasmo-gap-2 plasmo-items-center">
- <div className="plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-w-full">
-  <p className='plasmo-text-white'>Password</p>
-  <input
-  type={inputType}
-onChange={(e) => {
-  setPassword(e.target.value);
-}}
-value={password}
-placeholder='Enter Password To Confirm...'
-className='plasmo-bg-accent plasmo-w-full plasmo-border plasmo-border-secondary plasmo-rounded-lg plasmo-p-2 plasmo-text-white'
-/>
- </div>
-
-<div onClick={()=>{
-  if(inputType === 'text'){
-    setInputType('password');
-    return;
-  }
-  setInputType('text');
-}} className='plasmo-text-secondary plasmo-text-2xl'>
-{inputType === 'text' ? <IoEyeOff/> : <FaEye/>}  
-</div>  
- </div>
-
-</div>
-<button 
-onClick={handleLoadCheckOwnership}
-className='plasmo-bg-secondary plasmo-self-center plasmo-w-full plasmo-mt-6 plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo-border-secondary plasmo-text-accent hover:plasmo-bg-accent hover:plasmo-text-secondary hover:plasmo-scale-95 plasmo-transition-all'
-
->Confirm</button>
-</>}
-
-  </div>
-</Modal>
 {publicAddress && ((nftElements &&  nftElements.length > 0) || importedNfts.length > 0) &&
 <div className='plasmo-h-64 plasmo-w-full plasmo-overflow-y-auto plasmo-grid plasmo-grid-cols-3 plasmo-gap-4'>
 
@@ -207,13 +135,7 @@ className='plasmo-bg-secondary plasmo-self-center plasmo-w-full plasmo-mt-6 plas
 
     {publicAddress && importedNfts && importedNfts.length > 0 && 
      <> 
-    {importedNfts.map((element, index)=>(<div className='plasmo-w-28 plasmo-relative plasmo-top-0 plasmo-left-0 plasmo-h-28 plasmo-rounded-lg'>
-      <img src={`${element.image}`} height={64} width={64} className='plasmo-w-full plasmo-rounded-lg plasmo-h-full'/>
-
-      <div className="plasmo-absolute plasmo-p-1 plasmo-bottom-0 plasmo-left-0 plasmo-bg-accent/75 plasmo-w-full plasmo-h-6 plasmo-rounded-b-lg plasmo-line-clamp-1">
-        <p className='plasmo-text-secondary plasmo-text-xs'>{element.tokenName}</p>
-      </div>
-    </div>))}
+    {importedNfts.map((element, index)=>(<ImportedNFT index={index} element={element}/>))}
   </>
     }
 </div>
@@ -234,11 +156,9 @@ className='plasmo-bg-secondary plasmo-self-center plasmo-w-full plasmo-mt-6 plas
 
    {
    !isLoading &&
-   publicAddress && nftElements && nftElements.length === 0 && importedNfts && importedNfts.length === 0 && <div className='plasmo-w-full plasmo-flex plasmo-flex-col plasmo-items-center plasmo-gap-3 plasmo-py-3'>
-      <p className='plasmo-text-white plasmo-text-center'>No NFTs Owned Yet</p>
-      <PiFlyingSaucerFill className='plasmo-text-secondary plasmo-text-6xl'/>
-      <p className='plasmo-flex plasmo-gap-2 plasmo-items-center plasmo-text-white'>Start Exploring NFT World on <Link to={'https://opensea.io/'} target='_blank'><SiOpensea className='plasmo-text-secondary plasmo-flex plasmo-items-center plasmo-gap-2 plasmo-text-2xl'/></Link></p>
-      </div>}
+   publicAddress && nftElements && nftElements.length === 0 && importedNfts && importedNfts.length === 0 && 
+   <NoNFTs/>
+   }
 
 
 

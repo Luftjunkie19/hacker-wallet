@@ -9,6 +9,7 @@ import { ethers } from 'ethers';
 import { saveKey } from '~popup/IndexedDB/WalletDataStorage';
 import { erc20Abi } from '~popup/abis/ERC20';
 import bcrypt from 'bcryptjs';
+import Erc20Element from './elements/Erc20Tokens/home/Erc20Element';
 
 type Props = {}
 
@@ -51,6 +52,8 @@ const handleUploadERC20Token = async ()=>{
 
         const contract= new ethers.Contract(tokenAddress, erc20AbiInterface , decryptedWallet);
 
+        console.log(contract);
+
         if(!contract){
           alert('Sorry Bro, such contract does not exist !');
           return;
@@ -77,27 +80,19 @@ const handleUploadERC20Token = async ()=>{
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
   <p className='plasmo-text-white'>Token Address</p>
   <input
+  onChange={(e)=>setTokenAddress(e.target.value as `0x${string}`)}
 placeholder='Token Address...'
 className='plasmo-bg-accent plasmo-border plasmo-border-secondary plasmo-rounded-lg plasmo-p-2 plasmo-text-white'
 />
 </div>
 
 
-<div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
-  <p className='plasmo-text-white'>Token Id</p>
-  <input
-  type='number'
-step={1}
-min={1}
-placeholder='Token ID...'
-className='plasmo-bg-accent plasmo-border plasmo-border-secondary plasmo-rounded-lg plasmo-p-2 plasmo-text-white'
-/>
 
-
-
-</div>
-
-<button className='plasmo-bg-secondary plasmo-mt-6 plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo-border-secondary plasmo-text-accent hover:plasmo-bg-accent hover:plasmo-text-secondary hover:plasmo-scale-95 plasmo-transition-all'>
+<button
+onClick={handleUploadERC20Token}
+ className='plasmo-bg-secondary plasmo-mt-6 plasmo-rounded-lg 
+ plasmo-p-2 plasmo-border plasmo-border-secondary plasmo-text-accent 
+ hover:plasmo-bg-accent hover:plasmo-text-secondary hover:plasmo-scale-95 plasmo-transition-all'>
   Confirm
   </button>
 </>
@@ -107,20 +102,13 @@ className='plasmo-bg-accent plasmo-border plasmo-border-secondary plasmo-rounded
 
  {publicAddress && tokens && tokens.length > 0 &&
       <div className='plasmo-flex plasmo-flex-col plasmo-w-full plasmo-h-64 plasmo-gap-4 plasmo-overflow-y-auto plasmo-bg-primary'> 
-      {tokens.map((element, index)=>(<div className='plasmo-w-full plasmo-bg-accent plasmo-p-2 plasmo-rounded-lg plasmo-flex plasmo-items-center plasmo-justify-between'>
-        <div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
-    <p className='plasmo-text-white plasmo-line-clamp-1'>{element.tokenMetadata.name ?? "Ether"}  ({element.tokenMetadata.symbol ?? "ETH"})</p>
-    <button onClick={()=>navigator.clipboard.writeText(element.tokenAddress)} className='plasmo-text-sm plasmo-w-fit plasmo-p-1 plasmo-flex plasmo-items-center plasmo-gap-2 plasmo-text-secondary'>
-    <FaClipboard />
-        Copy address
-        </button>
-        </div>
-
-<div>
-    <p className='plasmo-flex plasmo-items-center plasmo-gap-2 plasmo-text-white plasmo-font-semibold'>{((Number(element.tokenBalance)) /  (10 ** (element.tokenMetadata.decimals ?? 18))).toFixed(2)} <span className='plasmo-text-secondary'>{element.tokenMetadata.symbol ?? "ETH"}</span></p>
-</div>
-
-     </div>))}
+      {tokens.map((element, index)=>(
+        <Erc20Element tokenAmount={((Number(element.tokenBalance)) /  (10 ** (element.tokenMetadata.decimals ?? 18))).toFixed(2)} 
+        tokenAddress={element.tokenAddress}
+        symbol={element.tokenMetadata.symbol}
+        tokenName={element.tokenMetadata.name}
+        />
+      ))}
     </div>
       }
 
