@@ -13,7 +13,7 @@ import { erc721Abi } from '~popup/abis/ERC721';
 import { erc20Abi } from '~popup/abis/ERC20';
 import { SiOpensea } from 'react-icons/si';
 import { Link } from 'react-router-dom';
-
+import bcrypt from 'bcryptjs';
 
 type Props = {
   maxAmountToSend:number, 
@@ -63,7 +63,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     })
     
 
-    const {register, reset, watch, formState, setValue }= useFormContext<z.infer<typeof zodERC20TxSchema>>();
+    const {register, reset, watch, setValue }= useFormContext<z.infer<typeof zodERC20TxSchema>>();
 
     const {register:nftRegister, reset:nftReset, watch:nftWatch, setValue:nftSetValue}=useFormContext<z.infer<typeof zodNFTTxSchema>>();
    
@@ -79,10 +79,23 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
 
       const getGasFee= async (isContractCall:boolean, isNFT?:boolean, txTemplate?:ethers.TransactionRequest)=>{
         try {
+
+        const isValid= await bcrypt.compare(password, passwordOfSession);
+
+        if(!isValid){
+          alert('Invalid Password !');
+          return;
+        }
+
           const provider = new ethers.JsonRpcProvider(rpcURL);
     
           const walletToDecrypt= await ethers.Wallet.fromEncryptedJson(encryptedPrivatKey, password);
-    
+
+          if(!walletToDecrypt){
+            alert('Something went wrong with action authentication.');
+            return;
+          }
+
           const decryptedWallet = new ethers.Wallet(walletToDecrypt.privateKey, provider);
     
           console.log(decryptedWallet);
@@ -170,7 +183,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
           
           const contractAddr= await contract.getAddress();
     
-          const amountToBeSentInNumber= watch('tokenAmountToBeSent') * (10 ** Number(decimals));
+          const amountToBeSentInNumber= Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals));
           
           const amountToBeSent= BigInt(amountToBeSentInNumber);
           
@@ -179,6 +192,11 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
           const tx = await allowanceTo.wait();
     
           console.log(tx);
+
+          if(!tx){
+            alert('Allowance has been reverted');
+            return;
+          }
           
           const data = contract.interface.encodeFunctionData("transferFrom", [publicAddress, watch('receiverAddress'), amountToBeSent]);
           
@@ -276,6 +294,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
       const moveToTransactionsSummary =  async ()=>{
        try {
+        console.log(watch('erc20TokenAddress'), nftWatch('nftTokenAddress'));
         
          if(watch('tokenAmountToBeSent') && maxAmountToSend && (maxAmountToSend < watch('tokenAmountToBeSent') || watch('tokenAmountToBeSent') === 0)){
           alert("You are not able to send the provided amount");
@@ -287,11 +306,9 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
           return;
         }
     
-        const isNotContractTx=((watch('erc20TokenAddress').trim() !== '') || (nftWatch('nftTokenAddress').trim() !== ''));
+        const isNotContractTx=((watch('erc20TokenAddress') && watch('erc20TokenAddress').trim() !== '') || (nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim() !== ''));
         
-        const information = await getGasFee(isNotContractTx, nftWatch('nftTokenAddress').trim() !== '',  !isNotContractTx && {from:publicAddress, to:watch('receiverAddress') || nftWatch('receiverAddress'), value: BigInt(watch('tokenAmountToBeSent') * (10 ** 18))})
-    
-        console.log(information);
+        const information = await getGasFee(isNotContractTx, nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim() !== '',  !isNotContractTx && {from:publicAddress, to:watch('receiverAddress') || nftWatch('receiverAddress'), value: watch('erc20TokenAddress') && watch('tokenAmountToBeSent') ? BigInt(0) : BigInt(watch('tokenAmountToBeSent') * (10 ** 18))});
     
         setGasFeesOptions(information);
     
@@ -310,7 +327,10 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
 
 
   return (
-    <>
+    <div className='
+    plasmo-w-full
+    plasmo-flex plasmo-flex-col plasmo-gap-4
+    plasmo-h-screen plasmo-overflow-auto'>
 <form>
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
     <p
@@ -334,14 +354,16 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
 <p className='plasmo-text-white plasmo-font-semibold plasmo-text-lg'>Select Token Type</p>
   <div className='plasmo-flex plasmo-gap-2'>
-<button onClick={()=>{
+<button onClick={(e)=>{
+  e.preventDefault();
   nftReset();
   setTokenType("ERC20");
 
   }} className={`plasmo-rounded-lg plasmo-p-2 ${tokenType === "ERC20" ? "plasmo-bg-accent plasmo-text-secondary hover:plasmo-bg-secondary/70 hover:plasmo-text-accent" : "plasmo-text-accent plasmo-bg-secondary hover:plasmo-bg-secondary/70"} hover:plasmo-scale-95 plasmo-transition-all`}>
   ERC20s/Native Token
 </button>
-<button onClick={()=>{
+<button onClick={(e)=>{
+   e.preventDefault();
 reset();
   setTokenType('NFT');
 }} className={` plasmo-rounded-lg plasmo-p-2 ${tokenType === "NFT" ? "plasmo-bg-accent plasmo-text-secondary hover:plasmo-bg-secondary/70 hover:plasmo-text-accent" : "plasmo-text-accent plasmo-bg-secondary hover:plasmo-bg-secondary/70"} hover:plasmo-scale-95 plasmo-transition-all`}>
@@ -390,7 +412,8 @@ type='number'
             ${watch('erc20TokenAddress') === element.tokenAddress ? "plasmo-bg-primary plasmo-p-2 plasmo-rounded-lg" :
              ""}
             `}
-            onClick={()=>{
+            onClick={(e)=>{
+               e.preventDefault();
               console.log(element);
               console.log('hello');
 
@@ -444,7 +467,8 @@ currentNetworkNativeTokenSymbol
 {nftElements && nftElements.length > 0 && <>
 {nftElements.map((element)=>(
   
-    <div onClick={()=>{
+    <div onClick={(e)=>{
+       e.preventDefault();
   nftSetValue('nftTokenAddress', element.contract.address);
   nftSetValue('tokenId', BigInt(element.tokenId));
 }}
@@ -492,7 +516,8 @@ className='plasmo-text-secondary plasmo-text-lg'>
 {importedNfts.length > 0 && importedNfts.map((
   element
 )=>(
-  <div onClick={()=>{
+  <div onClick={(e)=>{
+     e.preventDefault();
     nftSetValue('nftTokenAddress',element.nftAddress);
     nftSetValue('tokenId', BigInt(element.tokenId));
 }} className='plasmo-flex plasmo-gap-4 plasmo-bg-accent plasmo-border-secondary plasmo-border plasmo-rounded-lg
@@ -565,11 +590,17 @@ plasmo-text-white plasmo-font-semibold plasmo-text-lg
 
 <button
 className='plasmo-bg-secondary plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo-border-secondary plasmo-text-accent hover:plasmo-bg-accent hover:plasmo-text-secondary hover:plasmo-scale-95 plasmo-transition-all'
+onClick={(e)=>{
+  e.preventDefault();
+  setOpenModal(true);
+}}
 >
   Approve
 </button>
 </form>
-{openModal && <TransferModal setCloseModal={()=>setOpenModal(false)}>
+{openModal && <TransferModal setCloseModal={()=>{
+  setOpenModal(false);
+  }}>
     <div className="plasmo-flex plasmo-flex-col plasmo-w-full plasmo-h-full plasmo-p-2 plasmo-justify-between">
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-self-center plasmo-w-full">
   <p
@@ -590,7 +621,10 @@ plasmo-text-white plasmo-font-semibold plasmo-text-lg
 </div>
 
 <button
-onClick={moveToTransactionsSummary}
+onClick={async (e)=>{
+  e.preventDefault();
+  await moveToTransactionsSummary();
+}}
 className='plasmo-bg-secondary plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo-border-secondary plasmo-text-accent hover:plasmo-bg-accent hover:plasmo-text-secondary hover:plasmo-scale-95 plasmo-transition-all'
 >
   Summarize the Transaction
@@ -600,7 +634,7 @@ className='plasmo-bg-secondary plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo
 
   
   </TransferModal>}
-    </>
+    </div>
   )
 }
 

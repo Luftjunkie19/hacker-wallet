@@ -8,9 +8,9 @@ import TransactionSummary from '~popup/component/TransactionSummary';
 function TransferScreen() {
 
   const [currentStep, setCurrentStep]=useState<number>(0);
-const [maxAmountToSend, setMaxAmountToSend]=useState<number>();
+const [maxAmountToSend, setMaxAmountToSend]=useState<number>(0);
 const [password, setPassword]=useState<string>();
-const [gasFeeOptions, setGasFeeOptions]=useState<any>();
+const [gasFeeOptions, setGasFeeOptions]=useState<any>(null);
 
   const zodERC20TxSchema= z.object({
     erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).optional(),
@@ -26,11 +26,21 @@ const [gasFeeOptions, setGasFeeOptions]=useState<any>();
     
 
     const erc20Methods =useForm<z.infer<typeof zodERC20TxSchema>>({
-        resolver: zodResolver(zodERC20TxSchema)
+        resolver: zodResolver(zodERC20TxSchema),
+        defaultValues:{
+          'erc20TokenAddress':'',
+          'receiverAddress':'',
+          'tokenAmountToBeSent':0,
+        }
       });
 
       const nftMethods=useForm<z.infer<typeof zodNFTTxSchema>>({
-        resolver: zodResolver(zodNFTTxSchema)
+        resolver: zodResolver(zodNFTTxSchema),
+        defaultValues:{
+          'nftTokenAddress':'',
+          'receiverAddress':'',
+          'tokenId':null,
+        }
       });
 
   
@@ -38,12 +48,7 @@ const [gasFeeOptions, setGasFeeOptions]=useState<any>();
   return (
 <FormProvider {...nftMethods}> 
   <FormProvider {...erc20Methods}>
-    <div
-    className='
-    plasmo-w-full
-    plasmo-flex plasmo-flex-col plasmo-gap-4
-    plasmo-h-screen plasmo-overflow-auto'
-    >
+    <>
 
 {
   currentStep === 0 &&
@@ -66,7 +71,7 @@ currentStep === 1 && <TransactionSummary gasFeesOptions={gasFeeOptions} password
 }
 
       
-    </div>
+    </>
   </FormProvider>
 </FormProvider>
 

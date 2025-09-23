@@ -183,34 +183,28 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
       const handleFinalTransaction= async ()=>{
     
         try {
+          console.log('function gets executed');
     
-          if(nftWatch('nftTokenAddress') && nftWatch('tokenId')){
-             nftHandleSubmit(async ()=>{
+          if(nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').length === 42 && nftWatch('tokenId')){
+              console.log('Start of NFT Tx');
                 await sendNftToken();
-            }, (error)=>{
-                console.log(error);
-            })
-          return;
+                window.location.reload();
+                return;
           }
     
-          if(watch('erc20TokenAddress')){
-         handleSubmit(async ()=>{
+          if(watch('erc20TokenAddress') && watch('erc20TokenAddress').length === 42){
+
+          console.log('Start of ERC20 Tx');
             await sendERC20Token();
+            window.location.reload();
             return;
-         }, (error)=>{
-            console.log(error);
-         })
+         
           }
           
-          handleSubmit(async ()=>{
+            console.log('Start of native Tx');
             await handleNativeTokenTransaction();
-          }, (error)=>{
-            console.log(error)
-          })
-    
-              redirect('/');
-              window.location.reload();
-    
+           window.location.reload();
+        
     
         }catch(err){
           alert(err);
@@ -226,7 +220,12 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
 
 
   return (
-    <>
+    <form className='
+    plasmo-w-full
+    plasmo-flex plasmo-flex-col plasmo-gap-4
+    plasmo-h-screen plasmo-overflow-auto' onSubmit={maxAmountToSend !== 0 ? nftHandleSubmit(handleFinalTransaction, (err)=>{
+      console.log(err);
+    }) : handleSubmit(handleFinalTransaction, (err)=>console.log(err))}>
     <p
 className='plasmo-text-secondary plasmo-font-semibold plasmo-text-lg
 '>
@@ -257,37 +256,46 @@ className='plasmo-text-secondary plasmo-font-semibold plasmo-text-lg
 
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-w-full">
 <p className='plasmo-text-white'>Speed Of Tranasaction</p>
-
+{gasFeesOptions &&
 <div className="plasmo-w-full plasmo-grid plasmo-grid-cols-3 plasmo-items-center plasmo-gap-2">
-<button onClick={()=>setGasOption(gasFeesOptions.slow)} className='plasmo-bg-accent plasmo-p-3 plasmo-rounded-lg plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-items-center plasmo-justify-center'>
-<p className='plasmo-text-sm plasmo-text-white'>Slow</p>
 
-<GiSloth className='plasmo-text-secondary'/>
+{Object.values(gasFeesOptions).map((element, index)=>(
+<button onClick={(e)=>{
+  e.preventDefault();
+  setGasOption(element);
+}} className={`${selectedGasOption && Number((element as any).expectedFeeEth) === Number(selectedGasOption.expectedFeeEth) ? 'plasmo-bg-secondary/70 plasmo-border-accent plasmo-border-2' : 'plasmo-bg-accent'} plasmo-p-3 plasmo-rounded-lg plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-items-center plasmo-justify-center`}>
+<p className='plasmo-text-sm plasmo-text-white'>{
+  index === 0 ? 'Slow' : index === 1 ? 'Medium' : 'Fast'
+  }</p>
+
+{ index === 0 &&
+<GiSloth className={`${selectedGasOption && Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+}
+
+{index === 1 && 
+<LuBatteryMedium className={`${selectedGasOption &&  Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+}
+
+{index === 2 && 
+<MdFastfood className={`${selectedGasOption &&  Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+}
 
 </button>
-
-<button onClick={()=>setGasOption(gasFeesOptions.medium)} className='plasmo-bg-accent plasmo-p-3 plasmo-rounded-lg plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-items-center plasmo-justify-center'>
-<p className='plasmo-text-sm plasmo-text-white'>Medium</p>
-<LuBatteryMedium className='plasmo-text-secondary'/>
-</button>
-
-<button onClick={()=>setGasOption(gasFeesOptions.fast)} className='plasmo-bg-accent plasmo-p-3 plasmo-rounded-lg plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-items-center plasmo-justify-center'>
-<p className='plasmo-text-sm plasmo-text-white'>Fast</p>
-<MdFastfood className='plasmo-text-secondary'/>
-</button>
+))}
 
 </div>
+}
 
 </div>
 
 
 <button
-onClick={handleFinalTransaction}
+type='submit'
 className='plasmo-bg-secondary plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo-border-secondary plasmo-text-accent hover:plasmo-bg-accent hover:plasmo-text-secondary hover:plasmo-scale-95 plasmo-transition-all'
 >
   Send Transaction
 </button>
-    </>
+    </form>
   )
 }
 
