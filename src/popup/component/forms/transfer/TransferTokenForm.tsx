@@ -53,19 +53,19 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     const zodERC20TxSchema= z.object({
     erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).optional(),
     receiverAddress: z.string().startsWith("0x",{'error': 'Invalid Receiver Address !'}).length(42, {'error':'Invalid length of receiver contract'}),
-    tokenAmountToBeSent: z.number({'error':'Invalid type'}).lte(maxAmountToSend, {'error':'The provided number is larger than the all possible amount.'})
-    });
+    tokenAmountToBeSent: z.number({'error':'Invalid type'}).lte(maxAmountToSend, {'error':'The provided number is larger than the all possible amount.'}).gt(0, {'error':'Has to be greater than 0.'})
+    }).required({receiverAddress:true, tokenAmountToBeSent:true});
 
     const zodNFTTxSchema= z.object({
       nftTokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}),
       receiverAddress: z.string().startsWith("0x",{'error': 'Invalid Receiver Address !'}).length(42, {'error':'Invalid length of receiver contract'}),
       tokenId: z.bigint({'error':'Invalid type of tokenId provided'}).positive({'error':"Invalid value of tokenId."})
-    })
+    }).required({receiverAddress:true, tokenId:true, nftTokenAddress:true});
     
 
-    const {register, reset, watch, setValue }= useFormContext<z.infer<typeof zodERC20TxSchema>>();
+    const {register, reset, watch, setValue, trigger, formState }= useFormContext<z.infer<typeof zodERC20TxSchema>>();
 
-    const {register:nftRegister, reset:nftReset, watch:nftWatch, setValue:nftSetValue}=useFormContext<z.infer<typeof zodNFTTxSchema>>();
+    const {register:nftRegister, reset:nftReset, watch:nftWatch, setValue:nftSetValue, trigger:nftTrigger, formState:nftFormState}=useFormContext<z.infer<typeof zodNFTTxSchema>>();
    
 
 
@@ -297,9 +297,13 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
       const moveToTransactionsSummary =  async ()=>{
        try {
        
-        if(watch('tokenAmountToBeSent')) setValue('tokenAmountToBeSent', Number(watch('tokenAmountToBeSent')));
+        if(watch('tokenAmountToBeSent')){
+          setValue('tokenAmountToBeSent', Number(watch('tokenAmountToBeSent')));
+        }
 
-       if(nftWatch('tokenId')) nftSetValue('tokenId', BigInt(nftWatch('tokenId')));
+       if(nftWatch('tokenId')) {
+        nftSetValue('tokenId', BigInt(nftWatch('tokenId')));
+}
 
        console.log(watch('tokenAmountToBeSent'), nftWatch('tokenId'));
         
@@ -429,7 +433,6 @@ type='number'
             onClick={(e)=>{
                e.preventDefault();
               console.log(element);
-              console.log('hello');
 
               const decimals = element.tokenMetadata.decimals ?? 10 ** 18
 
@@ -445,7 +448,7 @@ plasmo-font-semibold
 '
 >
 {
-(Number(element.tokenBalance) / 10 ** (element.tokenMetadata.decimals) ?? 18 ).toFixed(4)
+(Number(element.tokenBalance) / element.tokenMetadata.decimals ? 10 ** element.tokenMetadata.decimals : 10 ** 18 ).toFixed(4)
 }
 </p>
 
@@ -478,9 +481,9 @@ currentNetworkNativeTokenSymbol
   
     <div onClick={(e)=>{
        e.preventDefault();
+       nftSetValue('nftTokenAddress', element.contract.address);
+       nftSetValue('tokenId', BigInt(element.tokenId));
        console.log(nftWatch('tokenId'));
-  nftSetValue('nftTokenAddress', element.contract.address);
-  nftSetValue('tokenId', BigInt(element.tokenId));
 }}
 
 className='plasmo-flex plasmo-gap-4 plasmo-bg-accent plasmo-border-secondary plasmo-border plasmo-rounded-lg
@@ -602,6 +605,24 @@ plasmo-text-white plasmo-font-semibold plasmo-text-lg
 className='plasmo-bg-secondary plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo-border-secondary plasmo-text-accent hover:plasmo-bg-accent hover:plasmo-text-secondary hover:plasmo-scale-95 plasmo-transition-all'
 onClick={(e)=>{
   e.preventDefault();
+  if(tokenType === 'ERC20'){
+           trigger(); 
+           console.log(formState.errors);
+          if(Object.values(formState.errors).find((item)=>item.message.trim() !== '')){
+            alert(`There are following errors occuring: \n
+              ${Object.values(formState.errors).filter((item)=>item.message.trim() !== '').map((item)=>`${item.message}\n`)}
+              `)
+            return
+          }
+          }else{
+            nftTrigger(); 
+             if(Object.values(nftFormState.errors).find((item)=>item.message.trim() !== '')){
+            alert(`There are following errors occuring: \n
+              ${Object.values(nftFormState.errors).filter((item)=>item.message.trim() !== '').map((item)=>`${item.message}\n`)}
+              `)
+            return
+          }
+          }
   setOpenModal(true);
 }}
 >
