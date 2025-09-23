@@ -11,6 +11,7 @@ import { erc721Abi } from '~popup/abis/ERC721'
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper'
 import * as z from 'zod';
 import { erc20Abi } from '~popup/abis/ERC20'
+import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/WalletDataStorage'
 type Props = {
     password:string
     maxAmountToSend:number,
@@ -36,7 +37,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
         const zodNFTTxSchema= z.object({
           nftTokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}),
           receiverAddress: z.string().startsWith("0x",{'error': 'Invalid Receiver Address !'}).length(42, {'error':'Invalid length of receiver contract'}),
-          tokenId: z.bigint({'error':'Invalid type of tokenId provided'}).positive({'error':"Invalid value of tokenId."})
+          tokenId: z.bigint().positive({'error':"Invalid value of tokenId."})
         })
         
 
@@ -71,11 +72,20 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
           gasLimit: selectedGasOption.gasLimit,
           maxFeePerGas:selectedGasOption.maxFeePerGas,
           maxPriorityFeePerGas: selectedGasOption.maxPriorityFeePerGas,
-    
         });
     
         const result = await tx.wait();
-    
+
+
+        const loadedElements= await fetchContainingKeywordElements();
+
+        const foundElement = loadedElements.find((item)=>item.nftAddress === contractAddr);
+
+        if(result && foundElement){
+          await deleteKey(`erc721-${contractAddr}`)
+        }
+        
+
         console.log(result);
     
         }catch(err){
@@ -86,6 +96,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
       const sendERC20Token = async ()=>{
         try {
           
+
           const isValid= await bcrypt.compare(password, passwordOfSession);
           
           if(!passwordOfSession || !isValid){
@@ -158,7 +169,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
         const tx= await walletDecrypted.sendTransaction({
       from:publicAddress,
       to: watch('receiverAddress'),
-      value:BigInt(watch('tokenAmountToBeSent') * (10**18)),
+      value: BigInt(watch('tokenAmountToBeSent') * (10**18)),
       'chainId': currentNetworkChainID,
       gasLimit: selectedGasOption.gasLimit ?? gasFeesOptions.medium.gasLimit,
           maxFeePerGas:selectedGasOption.maxFeePerGas  ?? gasFeesOptions.medium.maxFeePerGas,
@@ -225,8 +236,15 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
     plasmo-flex plasmo-flex-col plasmo-gap-4
     plasmo-h-screen plasmo-overflow-auto' onSubmit={maxAmountToSend !== 0 ? nftHandleSubmit(handleFinalTransaction, (err)=>{
       console.log(err);
-    }) : handleSubmit(handleFinalTransaction, (err)=>console.log(err))}>
+    }) : handleSubmit(handleFinalTransaction, (err)=>{
+      console.log(watch('tokenAmountToBeSent'));
+      console.log(err);
+      
+      })}>
     <p
+    onClick={(e)=>{
+      console.log(watch('tokenAmountToBeSent'));
+    }}
 className='plasmo-text-secondary plasmo-font-semibold plasmo-text-lg
 '>
   Transaction Summary

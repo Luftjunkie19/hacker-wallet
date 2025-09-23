@@ -30,7 +30,7 @@ const [gasFeeOptions, setGasFeeOptions]=useState<any>(null);
         defaultValues:{
           'erc20TokenAddress':'',
           'receiverAddress':'',
-          'tokenAmountToBeSent':0,
+          'tokenAmountToBeSent': Number(0),
         }
       });
 

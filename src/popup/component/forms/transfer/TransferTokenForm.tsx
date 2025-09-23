@@ -80,6 +80,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
       const getGasFee= async (isContractCall:boolean, isNFT?:boolean, txTemplate?:ethers.TransactionRequest)=>{
         try {
 
+
         const isValid= await bcrypt.compare(password, passwordOfSession);
 
         if(!isValid){
@@ -167,6 +168,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
         }
     
         console.log('ERC20 starts');
+        
           const erc20Interface = new ethers.Interface(erc20Abi);
           contract = new ethers.Contract(watch('erc20TokenAddress'), erc20Interface, decryptedWallet);
     
@@ -294,7 +296,12 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
       const moveToTransactionsSummary =  async ()=>{
        try {
-        console.log(watch('erc20TokenAddress'), nftWatch('nftTokenAddress'));
+       
+        if(watch('tokenAmountToBeSent')) setValue('tokenAmountToBeSent', Number(watch('tokenAmountToBeSent')));
+
+       if(nftWatch('tokenId')) nftSetValue('tokenId', BigInt(nftWatch('tokenId')));
+
+       console.log(watch('tokenAmountToBeSent'), nftWatch('tokenId'));
         
          if(watch('tokenAmountToBeSent') && maxAmountToSend && (maxAmountToSend < watch('tokenAmountToBeSent') || watch('tokenAmountToBeSent') === 0)){
           alert("You are not able to send the provided amount");
@@ -376,6 +383,10 @@ reset();
 <div className="plasmo-flex plasmo-gap-2">
   <input
   {...register('tokenAmountToBeSent')}
+  onChange={(e)=>{
+    
+    setValue('tokenAmountToBeSent', Number(e.target.value));
+  }}
   step="0.001"
   min={0}
 type='number'
@@ -417,11 +428,10 @@ type='number'
               console.log(element);
               console.log('hello');
 
-              if(!element.tokenAddress){
-                setMaxAmountToSend(element.tokenBalance / 10 ** 18);
-                return;
-              }
-              setMaxAmountToSend(element.tokenBalance / 10 ** element.tokenMetadata.decimals);
+              const decimals = element.tokenMetadata.decimals ?? 10 ** 18
+
+
+              setMaxAmountToSend(element.tokenBalance / decimals);
               setValue('erc20TokenAddress', element.tokenAddress);
             }}
             >
@@ -432,11 +442,7 @@ plasmo-font-semibold
 '
 >
 {
-(Number(
-  element.tokenBalance
-) / 10 ** (element.tokenMetadata.decimals
- ?? 18
-)).toFixed(4)
+(Number(element.tokenBalance) / 10 ** (element.tokenMetadata.decimals) ?? 18 ).toFixed(4)
 }
 </p>
 
@@ -469,6 +475,7 @@ currentNetworkNativeTokenSymbol
   
     <div onClick={(e)=>{
        e.preventDefault();
+       console.log(nftWatch('tokenId'));
   nftSetValue('nftTokenAddress', element.contract.address);
   nftSetValue('tokenId', BigInt(element.tokenId));
 }}
