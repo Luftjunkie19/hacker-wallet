@@ -317,10 +317,13 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
         
         const information = await getGasFee(isNotContractTx, nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim() !== '',  !isNotContractTx && {from:publicAddress, to:watch('receiverAddress') || nftWatch('receiverAddress'), value: watch('erc20TokenAddress') && watch('tokenAmountToBeSent') ? BigInt(0) : BigInt(watch('tokenAmountToBeSent') * (10 ** 18))});
     
-        setGasFeesOptions(information);
+if(information){
+          setGasFeesOptions(information);
     
-        setCurrentStep(1);
-        setOpenModal(false);
+          setCurrentStep(1);
+          setOpenModal(false);
+return;
+}
     
        } catch (error) {
         alert(error);
