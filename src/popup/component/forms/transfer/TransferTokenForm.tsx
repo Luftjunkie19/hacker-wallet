@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { fetchContainingKeywordElements } from '~popup/IndexedDB/WalletDataStorage';
-import {useForm, useFormContext} from 'react-hook-form';
+import {useFormContext} from 'react-hook-form';
 import * as z from 'zod';
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper';
 import { DropdownMenu } from 'radix-ui';
 import { RiTokenSwapFill } from 'react-icons/ri';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { ethers } from 'ethers';
 import TransferModal from '~popup/component/modals/TransferModal';
 import useFetchTokensData from '~popup/hooks/useFetchTokensData';

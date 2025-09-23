@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs/umd/types'
+import bcrypt from 'bcryptjs'
 import { ethers } from 'ethers'
 import React, { useState } from 'react'
 import {  useFormContext } from 'react-hook-form'
