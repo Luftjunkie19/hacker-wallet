@@ -83,8 +83,6 @@ const handleCheckMnemonicWords=() => {
 
       };
 
-
-
 const encryptAndLoginWallet= async ()=>{
     try{
  if ((ethers).Wallet && (ethers).Wallet.fromPhrase && password.trim().length >= 12) {

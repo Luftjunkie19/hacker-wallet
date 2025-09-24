@@ -6,47 +6,89 @@ import { useAppDispatch } from '../state-managment/ReduxWrapper';
 import { setCurrentWallet } from '../state-managment/slices/LoggedInWallet';
 import { saveKey } from '../IndexedDB/WalletDataStorage';
 import bcrypt from 'bcryptjs';
-
+import * as z from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 type Props = {}
 
 function RestoreWallet({}: Props) {
-  const [recoveryPhrase, setRecoveryPhrase] = useState<string>('');
   const [isValidSeed, setIsValidSeed]=useState<boolean>(false);
-  const [password, setPassword]=useState<string>();
+ 
+  const restoreWalletSchema=z.object({
+    password:z.string({error:"Invalid type"}).min(12, {error:'The password has to be at least 12 characters long.'}),
+recoveryPhrase: z.string({'error':'Invalid Type'}).refine((string)=>string.trim().split(' ').length === 12,{error:'The Mnemnonic has to contain 12 words.'})
+  });
 
+
+  const {trigger, formState, register, reset, watch, handleSubmit}=useForm<z.infer<typeof restoreWalletSchema>>({
+    resolver:zodResolver(restoreWalletSchema)
+  });
+
+  
   const dispatch = useAppDispatch();
 
-  const validateTheWallet=()=>{
-    const words = recoveryPhrase.trim().split(" "); 
-    if (words.length !== 12) {
-      alert("Recovery phrase must be 12 words.");
-      return;
+  const validateTheWallet= async (e)=>{
+    e.preventDefault();
+
+   try{
+
+   const triggerResult = await trigger('recoveryPhrase');
+
+    console.log(triggerResult);
+
+
+    if(formState.errors.recoveryPhrase && formState.errors.recoveryPhrase.message && formState.errors.recoveryPhrase.message.trim().length > 0){
+alert(`Error: ${formState.errors.recoveryPhrase.message}`);
+return;
     }
 
-    const isValid = words.every(word => /^[a-zA-Z]+$/.test(word));
+    const isValid = watch('recoveryPhrase').trim().split(' ').every(word => /^[a-zA-Z]+$/.test(word));
     if (!isValid) {
       alert("Recovery phrase contains invalid characters.");
       return;
     }
 
-const wallet = ethers.Wallet.fromPhrase(recoveryPhrase);
-setIsValidSeed(true);
+const wallet = ethers.Wallet.fromPhrase(watch('recoveryPhrase'));
 
-console.log('Restored Wallet Details:', wallet);
-alert("Wallet Recovery is valid, now set the password.");
+if(wallet){
+  setIsValidSeed(true);
+  
+  console.log('Restored Wallet Details:', wallet);
+  alert("Wallet Recovery is valid, now set the password.");
+return;
+}
+
+alert('Error ! Something went wrong with restoring the wallet.')
+
+   }catch(err){
+console.log(err);
+   }
+
   }
 
 
   const restoreWallet = async () => {
-const wallet = ethers.Wallet.fromPhrase(recoveryPhrase); 
+try {
+
+  const wallet = ethers.Wallet.fromPhrase(watch('recoveryPhrase')); 
+
+  if(!wallet){
+    alert('No such wallet exists');
+    return;
+  }
+
 
 console.log('Restored Wallet Address:', wallet.address);
 console.log('Restored Wallet Private Key:', wallet.privateKey);
 
-const encryptedWallet= await wallet.encrypt(password);
+if(formState.errors.password.message.length !== 12){
+  return;
+}
 
+const encryptedWallet= await wallet.encrypt(watch('password'));
 
-const encryptedPassword= bcrypt.hashSync(password, 10);
+const encryptedPassword= bcrypt.hashSync(watch('password'), 10);
+
 
 await saveKey(`keystore-${wallet.address}`, {encryptedWallet, password:encryptedPassword});
 
@@ -68,11 +110,22 @@ dispatch(
 );
 redirect('/');
 alert('Wallet restored successfully!');
+
+  
+} catch (error) {
+  console.log(error)
+}
   }
 
 
   return (
-    <div className='plasmo-w-full
+    <form
+    onSubmit={handleSubmit(async()=>{await restoreWallet();},(err)=>{
+      alert(`${Object.values(err).map((errorEl)=>`${errorEl.message} \n`)}`)
+      console.log(err);
+      return;
+    })}
+    className='plasmo-w-full
 plasmo-flex plasmo-flex-col plasmo-gap-3
     '>
       {!isValidSeed &&       
@@ -81,10 +134,7 @@ plasmo-flex plasmo-flex-col plasmo-gap-3
 className='plasmo-text-base plasmo-font-semibold plasmo-text-secondary'
 >Enter your recovery phrase:</p>
 <TextArea
-onChange={(e) => {
-  setRecoveryPhrase(e.target.value);
-}}
-value={recoveryPhrase}
+{...register('recoveryPhrase')}
 placeholder='Recovery phrase...'
 className='plasmo-h-24'
 />
@@ -111,15 +161,14 @@ className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasm
 className='plasmo-text-base plasmo-font-semibold plasmo-text-secondary'
 >Enter Your Password:</p>
 <input
-onChange={(e) => {
-  setPassword(e.target.value);
-}}
-value={password}
+{...register('password')}
+
 placeholder='Recovery phrase...'
 className='plasmo-bg-accent plasmo-border plasmo-border-secondary plasmo-rounded-lg plasmo-p-2 plasmo-text-white'
 />
 
 <button
+type='submit'
 onClick={restoreWallet}
 className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasmo-justify-center plasmo-border  plasmo-border-accent
         plasmo-font-semibold plasmo-text-sm plasmo-rounded-lg plasmo-px-4 plasmo-py-2 plasmo-text-primary
@@ -133,7 +182,7 @@ className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasm
 }
 
 
-    </div>
+    </form>
   )
 }
 

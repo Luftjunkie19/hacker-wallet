@@ -136,6 +136,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
          const result = await tx.wait();
     
          console.log(result);
+         
     
           
         } catch (error) {

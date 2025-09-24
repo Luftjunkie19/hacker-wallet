@@ -345,7 +345,7 @@ return;
     plasmo-w-full
     plasmo-flex plasmo-flex-col plasmo-gap-4
     plasmo-h-screen plasmo-overflow-auto'>
-<form>
+
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
     <p
       className='plasmo-text-white plasmo-text-lg plasmo-font-semibold'>From </p>
@@ -628,7 +628,7 @@ onClick={(e)=>{
 >
   Approve
 </button>
-</form>
+
 {openModal && <TransferModal setCloseModal={()=>{
   setOpenModal(false);
   }}>
