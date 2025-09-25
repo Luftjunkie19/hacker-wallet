@@ -69,6 +69,16 @@ console.log(err);
 
   const restoreWallet = async () => {
 try {
+  console.log(formState.errors);
+
+  if(
+    formState.errors.password &&
+    formState.errors.password.message && formState.errors.password.message.length !== 0){
+  return;
+}
+
+
+
 
   const wallet = ethers.Wallet.fromPhrase(watch('recoveryPhrase')); 
 
@@ -81,9 +91,6 @@ try {
 console.log('Restored Wallet Address:', wallet.address);
 console.log('Restored Wallet Private Key:', wallet.privateKey);
 
-if(formState.errors.password.message.length !== 12){
-  return;
-}
 
 const encryptedWallet= await wallet.encrypt(watch('password'));
 
