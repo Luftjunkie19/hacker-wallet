@@ -78,8 +78,6 @@ try {
 }
 
 
-
-
   const wallet = ethers.Wallet.fromPhrase(watch('recoveryPhrase')); 
 
   if(!wallet){
