@@ -14,7 +14,7 @@ console.log(
 
       chrome.tabs.create(
           {
-              url:`${blockExplorerURL}/${element.contractAddress}`
+              url:`${blockExplorerURL}/token/${element.nftAddress}`
           }
       )
   }

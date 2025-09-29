@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 
 import {  useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
 import { useNavigate } from 'react-router-dom';
-import { deleteKey } from '~popup/IndexedDB/WalletDataStorage';
+import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/WalletDataStorage';
 
 import { ethers } from 'ethers';
 import bcrypt  from 'bcryptjs';
@@ -26,7 +26,6 @@ await deleteKey('session');
 
 
     const handleGetAccountDetails= async ()=>{
-console.log(password);
 
 const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
   if(isPasswordNotTheSame){
@@ -44,20 +43,34 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
     }
 const navigate=useNavigate();
 
+
+const handleGetWallets=useCallback(
+  async()=>{
+const loadedElements= await fetchContainingKeywordElements();
+
+const wallets = loadedElements.filter((item)=>item.encryptedWallet && item.password && !item.loggedAt);
+
+console.log(wallets);
+
+  },[]);
+
+
     return (
-    <div className="plasmo-gap-24 plasmo-flex 
+    <div className="plasmo-gap-12 plasmo-flex 
    plasmo-justify-between plasmo-w-full
     plasmo-items-center">
            <div
-           onClick={()=>navigate('/')}
-           className="self-center
-           plasmo-flex plasmo-gap-2 plasmo-items-center plasmo-cursor-pointer
-           ">
+           onClick={()=>navigate('/')}>
               <img src={require('../icon.png')} width={56}height={56}className="plasmo-w-12 plasmo-h-12 plasmo-rounded-lg" alt="HackerWallet Logo" />
-        <p className="plasmo-text-lg plasmo-text-center plasmo-font-bold plasmo-text-secondary">
-        HackerWallet
-      </p>
+    
       </div>
+
+
+
+
+
+
+
 
       {
 isLoggedIn &&

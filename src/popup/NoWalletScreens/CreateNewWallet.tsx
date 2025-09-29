@@ -108,7 +108,8 @@ const encryptAndLoginWallet= async ()=>{
 
       await saveKey(`keystore-${wallet.address}`, {
         encryptedWallet,
-        password: encryptedPassword
+        password: encryptedPassword,
+        address:wallet.address,
       });
 
       await saveKey('session', {

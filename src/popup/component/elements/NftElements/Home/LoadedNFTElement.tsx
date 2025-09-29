@@ -19,7 +19,7 @@ console.log(
 
         chrome.tabs.create(
             {
-                url:`${blockExplorerURL}/${element.contractAddress}`
+                          url:`${blockExplorerURL}/token/${element.contractAddress}`
             }
         )
     }
@@ -29,9 +29,11 @@ console.log(
 <>
 <div
 onClick={chromeContractRedirection}
-id={`${ crypto.randomUUID()
+id={`${  crypto.randomUUID()
 }`} className='plasmo-w-24 plasmo-cursor-pointer plasmo-relative plasmo-top-0 plasmo-left-0 plasmo-h-24 plasmo-rounded-lg'>
-      <img src={``} height={64} width={64} className='plasmo-w-full plasmo-rounded-lg plasmo-h-full'/>
+      <img src={
+        require('../../../../icon.png')
+      } height={64} width={64} className='plasmo-w-full plasmo-rounded-lg plasmo-h-full'/>
 
       <div className="plasmo-absolute plasmo-p-1 plasmo-bottom-0 plasmo-left-0 plasmo-bg-accent/75 plasmo-w-full plasmo-h-6 plasmo-rounded-b-lg plasmo-line-clamp-1">
         <p className='plasmo-text-secondary
