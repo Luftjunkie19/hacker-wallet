@@ -6,7 +6,7 @@ const initialState={
     networkName:'Ethereum Sepolia',
     rpcURL:`https://eth-sepolia.g.alchemy.com/v2/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}`,
     currencySymbol:'SepoliaETH',
-    networkAlchemyId:'sepolia-eth'
+    networkAlchemyId:'eth-sepolia'
 };
 
 export const currentConnectedNetwork = createSlice({

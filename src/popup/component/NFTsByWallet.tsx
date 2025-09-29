@@ -1,19 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper';
-import { PiFlyingSaucerFill } from "react-icons/pi";
-import { Link } from 'react-router-dom';
-import { SiOpensea } from "react-icons/si";
 import useFetchNftData from '~popup/hooks/useFetchNftData';
-import Modal from './modals/Modal';
+
 import { ethers } from 'ethers';
 import { erc721Abi } from '~popup/abis/ERC721';
 import { saveKey, fetchContainingKeywordElements} from '~popup/IndexedDB/WalletDataStorage';
 import bcrypt from 'bcryptjs';
-import { IoEyeOff } from 'react-icons/io5';
-import { FaEye } from 'react-icons/fa';
 import ImportedNFT from './elements/NftElements/Home/ImportedNFT';
 import NoNFTs from './elements/NftElements/Home/NoNFTs';
 import LoadYourNFTModal from './elements/NftElements/Home/LoadYourNFTModal';
+import LoadedNFTElement from './elements/NftElements/Home/LoadedNFTElement';
 type Props = {}
 
 function NFTsByWallet({}: Props) {
@@ -21,6 +17,7 @@ function NFTsByWallet({}: Props) {
   } =useFetchNftData();
     const publicAddress=useAppSelector((state)=>state.loggedIn.address);
     const rpcURL=useAppSelector((state)=>state.currentNetworkConnected.rpcURL);
+    
     const chainId =useAppSelector((state)=>state.currentNetworkConnected.chainId);
     const currentNetworkAlchemyId =useAppSelector((state)=>state.currentNetworkConnected.networkAlchemyId);
     const encryptedPrivateKey=useAppSelector((state)=>state.loggedIn.encryptedWallet);
@@ -36,14 +33,14 @@ function NFTsByWallet({}: Props) {
 const fetchERC721s= useCallback(async ()=>{
   const elements= await fetchContainingKeywordElements();
 
-  console.log((elements as unknown as any[]).filter((element)=> typeof element.nftAddress === 'string' ));
+const importedNftElements= (elements as unknown as any[]).filter((element)=> typeof element.nftAddress === 'string' && element.chainId === chainId);
 
-  setImportedNfts((elements as unknown as any[]).filter((element)=> typeof element.nftAddress === 'string' ));
+  setImportedNfts(importedNftElements);
 },[]);
 
 useEffect(()=>{
   fetchERC721s();
-},[])
+},[fetchERC721s])
 
    
 
@@ -122,13 +119,18 @@ inputType={inputType} setInputType={setInputType} handleLoadCheckOwnership={hand
 
 />
 {publicAddress && ((nftElements &&  nftElements.length > 0) || importedNfts.length > 0) &&
-<div className='plasmo-h-64 plasmo-w-full plasmo-overflow-y-auto plasmo-grid plasmo-grid-cols-3 plasmo-gap-4'>
+<div className='plasmo-h-64 plasmo-w-full plasmo-overflow-y-auto plasmo-grid plasmo-grid-cols-3 
+plasmo-overflow-x-hidden
+plasmo-gap-2'>
 
   {publicAddress && nftElements && nftElements.length > 0 &&
     <> 
-    {nftElements.map((element, index)=>(<div>
-      <p className='plasmo-text-secondary'>{JSON.stringify(element)}</p>
-    </div>))}
+    {nftElements.map((element, index)=>(
+<LoadedNFTElement
+element={element}
+index={index}
+/>
+    ))}
   </>
     }
 

@@ -5,6 +5,8 @@ import { FaGear } from 'react-icons/fa6'
 import { IoLogOut } from 'react-icons/io5'
 import { RiGitRepositoryPrivateFill } from 'react-icons/ri'
 
+import { useAppSelector } from '~popup/state-managment/ReduxWrapper'
+
 type Props = {
     openSensitiveModal:()=>void,
     logoutFromWallet: ()=>Promise<void>
@@ -12,6 +14,10 @@ type Props = {
 }
 
 function SettingsDropDown({openSensitiveModal, logoutFromWallet}: Props) {
+
+  const blockExplorerURL = useAppSelector((state)=>state.currentNetworkConnected.blockExplorerURL);
+
+
   return (
  <DropdownMenu.Root>
     <DropdownMenu.Trigger>
@@ -34,12 +40,13 @@ function SettingsDropDown({openSensitiveModal, logoutFromWallet}: Props) {
      <RiGitRepositoryPrivateFill />    Reveal Private Key
              </DropdownMenu.Item>
         <DropdownMenu.Separator />
-        <DropdownMenu.Item className='plasmo-flex plasmo-items-center plasmo-outline-none plasmo-cursor-pointer
+        <DropdownMenu.Item onClick={()=>chrome.tabs.create({url:blockExplorerURL})} className='plasmo-flex plasmo-items-center plasmo-outline-none plasmo-cursor-pointer
       hover:plasmo-text-secondary plasmo-transition-all
-     hover:plasmo-scale-95
-     plasmo-gap-2'>
+      hover:plasmo-scale-95
+      plasmo-gap-2'>
        <FaExternalLinkAlt/>
                Network's Explorer
+    
              </DropdownMenu.Item>
    </div>
  

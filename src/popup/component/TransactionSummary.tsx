@@ -6,7 +6,7 @@ import { FaArrowDown } from 'react-icons/fa'
 import { GiSloth } from 'react-icons/gi'
 import { LuBatteryMedium } from 'react-icons/lu'
 import { MdFastfood } from 'react-icons/md'
-import { redirect } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { erc721Abi } from '~popup/abis/ERC721'
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper'
 import * as z from 'zod';
@@ -26,7 +26,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
     const rpcURL=useAppSelector((state)=>state.currentNetworkConnected.rpcURL);
     const currentNetworkChainID = useAppSelector((state)=>state.currentNetworkConnected.chainId);
     const passwordOfSession = useAppSelector((state)=>state.loggedIn.password);
-
+    const navigate =useNavigate();
 
     const zodERC20TxSchema= z.object({
         erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).optional(),
@@ -200,7 +200,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
           if(nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').length === 42 && nftWatch('tokenId')){
               console.log('Start of NFT Tx');
                 await sendNftToken();
-                window.location.reload();
+                navigate('/');
                 return;
           }
     
@@ -208,14 +208,14 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
 
           console.log('Start of ERC20 Tx');
             await sendERC20Token();
-            window.location.reload();
+            navigate('/');
             return;
          
           }
           
             console.log('Start of native Tx');
             await handleNativeTokenTransaction();
-           window.location.reload();
+            navigate('/');
         
     
         }catch(err){

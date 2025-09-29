@@ -10,7 +10,7 @@ type Props = {
 
 function Erc20Element({tokenAddress, tokenName, symbol, tokenAmount}: Props) {
   return (
-(<div className='plasmo-w-full plasmo-bg-accent plasmo-p-2 plasmo-rounded-lg plasmo-flex plasmo-items-center plasmo-justify-between'>
+(<div id={`${tokenAddress}-${symbol}`} className='plasmo-w-full plasmo-bg-accent plasmo-p-2 plasmo-rounded-lg plasmo-flex plasmo-items-center plasmo-justify-between'>
         <div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
     <p className='plasmo-text-white plasmo-line-clamp-1'>{tokenName ?? "Ether"}  ({symbol ?? "ETH"})</p>
     <button onClick={()=>navigator.clipboard.writeText(tokenAddress)} className='plasmo-text-sm plasmo-w-fit plasmo-p-1 plasmo-flex plasmo-items-center plasmo-gap-2 plasmo-text-secondary'>

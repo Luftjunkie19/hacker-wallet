@@ -8,6 +8,8 @@ import UnloggedScreen from '~popup/UnloggedScreen';
 import { loadKey } from '~popup/IndexedDB/WalletDataStorage';
 import { setCurrentWallet } from './slices/LoggedInWallet';
 import TransferScreen from '~popup/LogggedInScreens/TransferScreen';
+import Header from '~popup/component/Header';
+import { setCurrentNetwork } from './slices/CurrentWalletNetwork';
 
 type Props = {}
 
@@ -18,23 +20,30 @@ function Router({}: Props) {
 
   const loadElement=useCallback(async ()=>{
     const loadedDb= await loadKey(`session`);
-    console.log(loadedDb);
+
+    const loadedCurrentNetwork = await loadKey('currentConnectedNetwork');
+
 
     if(typeof loadedDb !== 'undefined') dispatch(setCurrentWallet({'address':loadedDb.account, 'encryptedWallet':loadedDb.encryptedWallet,
       password: loadedDb.password,
     }));
+
+    if(typeof loadedCurrentNetwork !== 'undefined') dispatch(setCurrentNetwork({...loadedCurrentNetwork}));
+
     
   },[]);
 
 
   useEffect(()=>{
     loadElement();
-  },[]);
+  },[loadElement]);
 
 
   return (
 <>
+
 <MemoryRouter>
+<Header/>
   <Routes>
   {
    !selector ?

@@ -1,8 +1,8 @@
 import {  TextArea } from '@radix-ui/themes'
 import { ethers } from 'ethers';
 import React, { useState } from 'react'
-import { redirect } from 'react-router-dom';
-import { useAppDispatch } from '../state-managment/ReduxWrapper';
+import {  useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../state-managment/ReduxWrapper';
 import { setCurrentWallet } from '../state-managment/slices/LoggedInWallet';
 import { saveKey } from '../IndexedDB/WalletDataStorage';
 import bcrypt from 'bcryptjs';
@@ -13,12 +13,12 @@ type Props = {}
 
 function RestoreWallet({}: Props) {
   const [isValidSeed, setIsValidSeed]=useState<boolean>(false);
- 
+  const currentNetworkConnected = useAppSelector((state)=>state.currentNetworkConnected);
   const restoreWalletSchema=z.object({
     password:z.string({error:"Invalid type"}).min(12, {error:'The password has to be at least 12 characters long.'}),
 recoveryPhrase: z.string({'error':'Invalid Type'}).refine((string)=>string.trim().split(' ').length === 12,{error:'The Mnemnonic has to contain 12 words.'})
   });
-
+const navigate = useNavigate();
 
   const {trigger, formState, register, reset, watch, handleSubmit}=useForm<z.infer<typeof restoreWalletSchema>>({
     resolver:zodResolver(restoreWalletSchema)
@@ -113,8 +113,11 @@ dispatch(
     password: encryptedPassword,
   })
 );
-redirect('/');
+
+await saveKey('currentConnectedNetwork', {...currentNetworkConnected});
 alert('Wallet restored successfully!');
+
+navigate('/');
 
   
 } catch (error) {

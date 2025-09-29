@@ -3,9 +3,9 @@ import {generateMnemonic, mnemonicToSeedSync} from 'bip39'
 import { Button } from '@radix-ui/themes';
 import {Toast} from 'radix-ui';
 import {ethers} from 'ethers';
-import { useAppDispatch } from '../state-managment/ReduxWrapper';
+import { useAppDispatch, useAppSelector } from '../state-managment/ReduxWrapper';
 import { setCurrentWallet } from '../state-managment/slices/LoggedInWallet';
-import { redirect } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaEye } from 'react-icons/fa';
 import { IoMdEyeOff } from "react-icons/io";
 import bcrypt from 'bcryptjs'
@@ -23,6 +23,9 @@ function CreateNewWallet({}: Props) {
   const [confirmedSeed, setConfirmedSeed]=useState<boolean>();
   const [password, setPassword]=useState<string>();
   const [type, setType]=useState<"password" | "text">("password");
+  const navigate = useNavigate();
+
+  const currentNetworkConnected = useAppSelector((state)=>state.currentNetworkConnected);
 
   const dispatch = useAppDispatch();
 
@@ -122,8 +125,10 @@ const encryptAndLoginWallet= async ()=>{
         address: wallet.address,
         password: encryptedPassword,
       }));
+
+      await saveKey('currentConnectedNetwork', {...currentNetworkConnected});
     
-      redirect('/');
+      navigate('/');
 
       return; 
 }

@@ -14,8 +14,10 @@ sessionDb= async ()=>{
 
 export const saveKey=async (key:string, value:any)=>{
     const database= await sessionDb();
-    database.add('web3-wallet-data', value, key);
+    database.put('web3-wallet-data', value, key);
 }
+
+
 
 export const loadKey= async (key:string)=>{
 const database= await sessionDb();

@@ -1,15 +1,10 @@
-import { DropdownMenu } from 'radix-ui';
 import React, { useState } from 'react'
-import { IoGitNetworkSharp, IoLogOut } from "react-icons/io5";
-import {FaClipboard, FaEthereum, FaExternalLinkAlt} from "react-icons/fa";
-import { FaGear } from "react-icons/fa6";
-import { RiGitRepositoryPrivateFill } from "react-icons/ri";
-import { useAppDispatch, useAppSelector } from '~popup/state-managment/ReduxWrapper';
-import { IoMdAddCircle } from 'react-icons/io';
-import { redirect } from 'react-router-dom';
-import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/WalletDataStorage';
-import { setCurrentNetwork } from '~popup/state-managment/slices/CurrentWalletNetwork';
-import TransferModal from './modals/TransferModal';
+
+import {  useAppSelector } from '~popup/state-managment/ReduxWrapper';
+
+import { useNavigate } from 'react-router-dom';
+import { deleteKey } from '~popup/IndexedDB/WalletDataStorage';
+
 import { ethers } from 'ethers';
 import bcrypt  from 'bcryptjs';
 import NetworksDropDown from './dropdowns/NetworksDropDown';
@@ -47,17 +42,14 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
       setPassword(null);
       }
     }
-
+const navigate=useNavigate();
 
     return (
     <div className="plasmo-gap-24 plasmo-flex 
    plasmo-justify-between plasmo-w-full
     plasmo-items-center">
            <div
-           onClick={()=>{
-            redirect('/');
-           window.location.reload();
-           }}
+           onClick={()=>navigate('/')}
            className="self-center
            plasmo-flex plasmo-gap-2 plasmo-items-center plasmo-cursor-pointer
            ">

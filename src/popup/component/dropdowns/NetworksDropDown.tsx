@@ -3,6 +3,7 @@ import React from 'react'
 import { FaEthereum } from 'react-icons/fa6';
 import { IoMdAddCircle } from 'react-icons/io';
 import { IoGitNetworkSharp } from 'react-icons/io5';
+import { saveKey } from '~popup/IndexedDB/WalletDataStorage';
 import { useAppDispatch, useAppSelector } from '~popup/state-managment/ReduxWrapper';
 import { setCurrentNetwork } from '~popup/state-managment/slices/CurrentWalletNetwork';
 
@@ -19,7 +20,7 @@ function NetworksDropDown({}: Props) {
     networkName:'Ethereum Sepolia',
     rpcURL:`https://eth-sepolia.g.alchemy.com/v2/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}`,
     currencySymbol:'SepoliaETH',
-    networkAlchemyId:'sepolia-eth'
+    networkAlchemyId:'eth-sepolia'
 },
 {
    chainId:17000,
@@ -27,7 +28,7 @@ function NetworksDropDown({}: Props) {
     networkName:'Ethereum Holesky',
     rpcURL:`https://eth-holesky.g.alchemy.com/v2/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}`,
     currencySymbol:'ETH',
-    networkAlchemyId:'holesky-eth'
+    networkAlchemyId:'eth-holesky'
 }
     ];
 
@@ -52,14 +53,12 @@ function NetworksDropDown({}: Props) {
   plasmo-flex plasmo-flex-col plasmo-gap-2
   ">
 {networksArray.map((network)=>(
-        <DropdownMenu.Item onClick={()=>{
+        <DropdownMenu.Item onClick={async ()=>{
+
+          await saveKey('currentConnectedNetwork', {...network})
+
         dispatch(setCurrentNetwork({
-          'blockExplorerURL':network.blockExplorerURL, 
-          'chainId':network.chainId,
-          'currencySymbol':network.currencySymbol,
-          'networkAlchemyId':network.networkAlchemyId,
-          'networkName':network.networkName,
-          rpcURL:network.rpcURL
+       ...network
         }));
 
 
