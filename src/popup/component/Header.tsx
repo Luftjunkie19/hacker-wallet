@@ -10,9 +10,9 @@ import bcrypt  from 'bcryptjs';
 import NetworksDropDown from './dropdowns/NetworksDropDown';
 import SettingsDropDown from './dropdowns/SettingsDropDown';
 import HeaderModal from './modals/HeaderModal';
-type Props = {}
+import WalletModal from './WalletModal';
 
-function Header({}: Props) {
+function Header() {
     const isLoggedIn= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
     const encryptedPrivateKey= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
     const encryptedPassword= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
@@ -22,6 +22,9 @@ function Header({}: Props) {
 
     const logoutFromWallet= async ()=>{
 await deleteKey('session');
+await deleteKey('currentConnectedNetwork');
+
+navigate('/');
     }
 
 
@@ -44,15 +47,7 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
 const navigate=useNavigate();
 
 
-const handleGetWallets=useCallback(
-  async()=>{
-const loadedElements= await fetchContainingKeywordElements();
 
-const wallets = loadedElements.filter((item)=>item.encryptedWallet && item.password && !item.loggedAt);
-
-console.log(wallets);
-
-  },[]);
 
 
     return (
@@ -66,8 +61,10 @@ console.log(wallets);
       </div>
 
 
-
-
+{
+  isLoggedIn &&
+<WalletModal/>
+}
 
 
 

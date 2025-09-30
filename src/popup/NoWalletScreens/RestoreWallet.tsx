@@ -95,7 +95,7 @@ const encryptedWallet= await wallet.encrypt(watch('password'));
 const encryptedPassword= bcrypt.hashSync(watch('password'), 10);
 
 
-await saveKey(`keystore-${wallet.address}`, {encryptedWallet, password:encryptedPassword});
+await saveKey(`keystore-${wallet.address}`, {encryptedWallet, password:encryptedPassword,  'address': wallet.address});
 
   await saveKey('session', {
         encryptedWallet, 

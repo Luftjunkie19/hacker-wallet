@@ -48,7 +48,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
     useEffect(()=>{
         fetchERC721s();
-    },[]);
+    },[fetchERC721s]);
     
     const zodERC20TxSchema= z.object({
     erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).optional(),
