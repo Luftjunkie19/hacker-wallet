@@ -33,7 +33,7 @@ function NFTsByWallet({}: Props) {
 const fetchERC721s= useCallback(async ()=>{
   const elements= await fetchContainingKeywordElements();
 
-const importedNftElements= (elements as unknown as any[]).filter((element)=> typeof element.nftAddress === 'string' && element.chainId === chainId);
+const importedNftElements= (elements as unknown as any[]).filter((element)=> typeof element.nftAddress === 'string' && element.chainId === chainId && element.ownerAddress === publicAddress);
 
   setImportedNfts(importedNftElements);
 },[]);
@@ -100,7 +100,8 @@ useEffect(()=>{
           tokenId,
           chainId, 
           currentNetworkAlchemyId,
-          nftAddress:tokenAddress
+          nftAddress:tokenAddress,
+          ownerAddress:publicAddress,
         });
 
         alert('Congratulations, you have successfully, imported your NFT !')

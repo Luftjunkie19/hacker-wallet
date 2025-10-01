@@ -36,7 +36,7 @@ const [
 
 
   return (<>
-  <div onClick={()=>setOpenModal(true)} className={`plasmo-flex plasmo-cursor-pointer plasmo-items-center plasmo-gap-3 plasmo-bg-accent plasmo-rounded-lg plasmo-max-w-36 plasmo-p-2 plasmo-w-full`}>
+  <div onClick={()=>setOpenModal(true)} className={`plasmo-flex plasmo-cursor-pointer plasmo-items-center plasmo-gap-3 plasmo-bg-accent plasmo-rounded-lg plasmo-max-w-36 plasmo-py-1 plasmo-px-3 plasmo-w-full`}>
 <BiCircle size={32} className='plasmo-text-secondary'/>
   <p className='plasmo-text-secondary plasmo-font-semibold plasmo-text-xs plasmo-line-clamp-1'>{currentSessionAddress}</p>
   </div>

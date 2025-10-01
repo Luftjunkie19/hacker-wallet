@@ -32,7 +32,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     const publicAddress = useAppSelector((state)=>state.loggedIn.address);
     const currentNetworkNativeTokenSymbol= useAppSelector((state)=>state.currentNetworkConnected.currencySymbol);
     const [tokenType, setTokenType]=useState<"ERC20" | "NFT">("ERC20"); 
-  
+    const [isLoading, setIsLoading]=useState<boolean>(false);
     const [openModal, setOpenModal]=useState<boolean>(false);
     const {tokens}=useFetchTokensData();
     const {elements:nftElements}=useFetchNftData();
@@ -79,12 +79,13 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
 
       const getGasFee= async (isContractCall:boolean, isNFT?:boolean, txTemplate?:ethers.TransactionRequest)=>{
         try {
-
+          setIsLoading(true);
 
         const isValid= await bcrypt.compare(password, passwordOfSession);
 
         if(!isValid){
           alert('Invalid Password !');
+               setIsLoading(false);
           return;
         }
 
@@ -94,6 +95,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
 
           if(!walletToDecrypt){
             alert('Something went wrong with action authentication.');
+            setIsLoading(false);
             return;
           }
 
@@ -106,8 +108,11 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
         const gasFeeBase= block.baseFeePerGas;
     
-        if(!gasFeeBase) throw new Error("Provider does not serve with the base of gas fee");
-    
+        if(!gasFeeBase) {
+          setIsLoading(false);
+          throw new Error("Provider does not serve with the base of gas fee");
+        }
+
         if(isContractCall){
         let contract:ethers.Contract;
         if(isNFT){
@@ -127,7 +132,10 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
       // 3. fee data
       const block = await provider.getBlock("latest");
-      if (!block?.baseFeePerGas) throw new Error("Network doesn't expose baseFee (not EIP-1559)");
+      if (!block?.baseFeePerGas) {
+        setIsLoading(false);
+        throw new Error("Network doesn't expose baseFee (not EIP-1559)");
+      }
       const baseFee = BigInt(block.baseFeePerGas);
     
       // try to get a sensible tip
@@ -168,6 +176,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
         }
     
         console.log('ERC20 starts');
+
         
           const erc20Interface = new ethers.Interface(erc20Abi);
           contract = new ethers.Contract(watch('erc20TokenAddress'), erc20Interface, decryptedWallet);
@@ -179,9 +188,11 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
           if(!decimals){
             alert("There are no decimals of the token");
-            
+                 setIsLoading(false);
             return;
           }
+
+console.log(Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals)));          
           
           const contractAddr= await contract.getAddress();
     
@@ -197,6 +208,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
 
           if(!tx){
             alert('Allowance has been reverted');
+                 setIsLoading(false);
             return;
           }
           
@@ -213,7 +225,11 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
       // 3. fee data
       const block = await provider.getBlock("latest");
-      if (!block?.baseFeePerGas) throw new Error("Network doesn't expose baseFee (not EIP-1559)");
+      if (!block?.baseFeePerGas){
+     setIsLoading(false);
+        throw new Error("Network doesn't expose baseFee (not EIP-1559)");
+
+      } 
       const baseFee = BigInt(block.baseFeePerGas);
     
       // try to get a sensible tip
@@ -288,14 +304,17 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
         } catch (error) {
           console.log(error);
+          setIsLoading(false);
           alert(error);
+        }finally{
+               setIsLoading(false);
         }
-    
       }
     
     
       const moveToTransactionsSummary =  async ()=>{
        try {
+             setIsLoading(true);
        
         if(watch('tokenAmountToBeSent')){
           setValue('tokenAmountToBeSent', Number(watch('tokenAmountToBeSent')));
@@ -332,6 +351,8 @@ return;
        } catch (error) {
         alert(error);
         console.log(error);
+       } finally{
+        setIsLoading(false);
        }
       
       }
@@ -379,6 +400,7 @@ return;
 <button onClick={(e)=>{
    e.preventDefault();
 reset();
+console.log(nftElements);
   setTokenType('NFT');
 }} className={` plasmo-rounded-lg plasmo-p-2 ${tokenType === "NFT" ? "plasmo-bg-accent plasmo-text-secondary hover:plasmo-bg-secondary/70 hover:plasmo-text-accent" : "plasmo-text-accent plasmo-bg-secondary hover:plasmo-bg-secondary/70"} hover:plasmo-scale-95 plasmo-transition-all`}>
   NFTs
@@ -481,43 +503,35 @@ currentNetworkNativeTokenSymbol
   
     <div onClick={(e)=>{
        e.preventDefault();
-       nftSetValue('nftTokenAddress', element.contract.address);
+       nftSetValue('nftTokenAddress', element.contractAddress);
        nftSetValue('tokenId', BigInt(element.tokenId));
        console.log(nftWatch('tokenId'));
 }}
 
-className='plasmo-flex plasmo-gap-4 plasmo-bg-accent plasmo-border-secondary plasmo-border plasmo-rounded-lg
-plasmo-justify-between plasmo-items-center plasmo-p-3 plasmo-text-white plasmo-cursor-pointer'>
+className={`plasmo-flex plasmo-gap-4 ${Number(nftWatch('tokenId')) === Number(element.tokenId) ? "plasmo-bg-accent plasmo-border-secondary" : "plasmo-bg-accent plasmo-border-primary"} plasmo-border plasmo-rounded-lg
+plasmo-justify-between plasmo-items-center plasmo-p-3 plasmo-text-white plasmo-cursor-pointer`}>
 <img
-src={element.image.thumbnailUrl}
+src={require('../../../icon.png')}
 width={32}
 height={32}
 className='plasmo-w-8 plasmo-h-8 plasmo-rounded-lg
 plasmo-border-secondary plasmo-border
 '
-alt={`${element.description}`}
+alt={`${element.tokenId}`}
 />
 
 <div className="
-plasmo-flex plasmo-flex-col plasmo-gap-1">
+plasmo-flex plasmo-flex-col plasmo-gap-1 plasmo-w-full">
   <p
   className='
-  plasmo-text-white plasmo-font-semibold'>
-    {element.name}
+  plasmo-text-white plasmo-text-xs plasmo-text-wrap plasmo-line-clamp-1 plasmo-font-light'>
+    {element.contractAddress.substring(0,6)}...{element.contractAddress.substring(element.contractAddress.length - 4)}
   </p>
-  <p
-  className='
-  plasmo-text-secondary plasmo-text-sm plasmo-font-light
-  '
-  >
-    {
-      element.description
-    }
-  </p>
+
 </div>
 
 <p
-className='plasmo-text-secondary plasmo-text-lg'>
+className='plasmo-text-secondary plasmo-font-bold plasmo-text-xs'>
 #{Number(element.tokenId)}
 </p>
 
@@ -632,6 +646,11 @@ onClick={(e)=>{
 {openModal && <TransferModal setCloseModal={()=>{
   setOpenModal(false);
   }}>
+    {isLoading ? <div className='plasmo-flex plasmo-w-full plasmo-h-full plasmo-items-center plasmo-justify-center'>
+
+<p className='plasmo-text-secondary plasmo-text-lg plasmo-font-bold'>Loading...</p>
+
+    </div> :    
     <div className="plasmo-flex plasmo-flex-col plasmo-w-full plasmo-h-full plasmo-p-2 plasmo-justify-between">
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-self-center plasmo-w-full">
   <p
@@ -662,6 +681,7 @@ className='plasmo-bg-secondary plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo
 </button>
 
   </div>
+    }
 
   
   </TransferModal>}

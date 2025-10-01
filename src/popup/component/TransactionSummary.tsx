@@ -11,6 +11,7 @@ import { erc721Abi } from '~popup/abis/ERC721'
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper'
 import * as z from 'zod';
 import { erc20Abi } from '~popup/abis/ERC20'
+import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/WalletDataStorage'
 type Props = {
     password:string
@@ -21,6 +22,7 @@ type Props = {
 function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) {
     const currentNetworkName= useAppSelector((state)=>state.currentNetworkConnected.networkName);
     const [selectedGasOption, setGasOption]=useState<any>();
+    const [isLoading, setIsLoading]=useState<boolean>(false);
     const encryptedPrivatKey= useAppSelector((state)=>state.loggedIn.encryptedWallet);
     const publicAddress= useAppSelector((state)=>state.loggedIn.address);
     const rpcURL=useAppSelector((state)=>state.currentNetworkConnected.rpcURL);
@@ -47,6 +49,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
 
     const sendNftToken = async ()=>{
         try{
+
         const isValid= await bcrypt.compare(password, passwordOfSession);
     
         if(!passwordOfSession || !isValid){
@@ -193,7 +196,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
     
     
       const handleFinalTransaction= async ()=>{
-    
+    setIsLoading(true);
         try {
           console.log('function gets executed');
     
@@ -222,6 +225,8 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
           alert(err);
           console.log(err);
     
+        }finally{
+          setIsLoading(false);
         }
     
       }
@@ -231,7 +236,20 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
 
 
 
-  return (
+  return (<>
+  {isLoading &&
+  <div className='  plasmo-w-full
+    plasmo-flex plasmo-flex-col plasmo-gap-4
+    plasmo-h-screen plasmo-overflow-auto plasmo-justify-center plasmo-items-center'>
+      <AiOutlineLoading3Quarters className='plasmo-animate-spin plasmo-text-secondary plasmo-text-2xl' />
+      <p className='plasmo-text-secondary plasmo-font-semibold plasmo-text-lg'>
+      Loading...
+      </p>
+      <p className='plasmo-text-secondary plasmo-font-light plasmo-text-sm'>Please wait while we process your transaction.</p>
+
+      </div>
+  }
+  {!isLoading &&  
     <form className='
     plasmo-w-full
     plasmo-flex plasmo-flex-col plasmo-gap-4
@@ -315,6 +333,8 @@ className='plasmo-bg-secondary plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo
   Send Transaction
 </button>
     </form>
+  }
+  </>
   )
 }
 
