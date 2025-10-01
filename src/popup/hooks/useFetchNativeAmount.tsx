@@ -25,7 +25,7 @@ function useFetchNativeAmount() {
      } catch (error) {
        setAmount(0);
      }
-     },[currentNetworkRPCUrl]);
+     },[currentNetworkRPCUrl, publicAddress]);
  
      useEffect(()=>{
        fetchAmountETH();

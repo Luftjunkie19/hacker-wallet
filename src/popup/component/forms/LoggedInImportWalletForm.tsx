@@ -1,40 +1,62 @@
-import React, { useState } from 'react'
+import React from 'react'
 import * as z from 'zod';
 import bcrypt from 'bcryptjs';
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper';
 import { useForm } from 'react-hook-form';
-import { TextArea } from '@radix-ui/themes';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { ethers } from 'ethers';
+import { saveKey } from '~popup/IndexedDB/WalletDataStorage';
 
-function LoggedInImportWalletForm(){
+type Props = {
+    onClose?: ()=>void
+}
+function LoggedInImportWalletForm({onClose}: Props){
 const sessionPassword= useAppSelector((state)=>state.loggedIn.password);
 
- const importWalletSchema= z.object({
-       importOption: z.string().refine((input)=> input === 'mnemonic' || input === 'private-key',{'error':'Invalid Option Selected'}).default('mnemonic'),
-        privateKey:z.string().startsWith('0x').length(66,{
-            'error':'Invalid Private-key provided',
 
-        }),
-        recoveryPhrase: z.string({'error':'Invalid Type'}).refine((string)=>string.trim().split(' ').length === 12,{error:'The Mnemnonic has to contain 12 words.'}),
+ const importWalletSchema= z.object({
+        recoveryPhrase: z.string({'error':'Invalid Type'}).refine((string)=> string.trim().split(' ').length === 12 || string.trim().split(' ').length === 15 || string.trim().split(' ').length === 18 || string.trim().split(' ').length === 21 || string.trim().split(' ').length === 24,{error:'The Mnemnonic has to contain (12, 15, 18, 21 or 24) words.'}),
         password: z.string().min(12, {'error':'The Length is invalid'}).refine(async(input)=> bcrypt.compareSync(input, sessionPassword), {
-            'error':'Password is Invalid :)'
+            'error':'Password is Invalid with the one you provided :)'
         })
-    }).refine((option)=> (option.importOption === 'mnemonic' && option.recoveryPhrase.trim().split(' ').length === 12) || (option.importOption === 'private-key' && option.privateKey.startsWith('0x') && option.privateKey.trim().length === 66),{
-        'error':'Invalid Recovery Option Input',
     });
+    
   
     const {
         handleSubmit,
         register,
         formState,
         setValue,
-        trigger,
-        watch
-    }=useForm<z.infer<typeof importWalletSchema>>();
+        getValues,reset,
+        watch,
+    }=useForm<z.infer<typeof importWalletSchema>>({
+        'defaultValues':{
+            'password':'',
+            'recoveryPhrase':''
+        },
+        resolver: zodResolver(importWalletSchema)
+    });
 
     const handleImportWallet= async ()=>{
         try {
 
-            console.log(formState);
+            console.log(formState.errors, getValues());
+
+            const importWalletFromMnemonic =  ethers.Wallet.fromPhrase(watch('recoveryPhrase'));
+
+            const encryptedJson = await importWalletFromMnemonic.encrypt(watch('password'));
+
+            await saveKey(`keystore-${importWalletFromMnemonic.address}`, {
+                'address': importWalletFromMnemonic.address,
+                'encryptedWallet': encryptedJson,
+                'password': bcrypt.hashSync(watch('password'), 10),
+            });
+
+            alert('Wallet Imported Successfully!');
+
+            reset();
+            
+            onClose();
             
         } catch (error) {
             console.log(error);
@@ -54,30 +76,23 @@ className='plasmo-w-full plasmo-flex plasmo-flex-col plasmo-gap-3 plasmo-h-full 
 <div
 className='plasmo-w-full plasmo-flex plasmo-flex-col plasmo-gap-3'>
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-w-full">
-<button
-className='plasmo-text-white'
-onClick={()=>{
-if(watch('importOption') === 'private-key'){
-    setValue('importOption', 'mnemonic');
-    return;
-}
-setValue('importOption', 'private-key');
-}}>
-Import by {watch('importOption') === 'private-key' ? ' Mnemonic' : 'Private Key'}
-</button>
-<p className='plasmo-text-secondary plasmo-font-semibold'>{watch('importOption') === 'private-key' ? ' Private Key' : 'Mnemonic'}</p>
+<p className='plasmo-text-secondary plasmo-font-semibold'>Mnemonic</p>
 
 <textarea
 className='plasmo-rounded-lg plasmo-border-secondary plasmo-border-2 plasmo-w-full plasmo-bg-accent plasmo-text-white plasmo-p-1 plasmo-h-24 placeholder:plasmo-text-white
 '
-{...(watch('importOption')
-     === 'private-key' ? register('privateKey') : register('recoveryPhrase'))} 
+{...register('recoveryPhrase')} 
 
-placeholder={watch('importOption')
-     === 'private-key' ? 'Enter Private Key...' : 'Enter Mnemonic'
-}
-
+placeholder={'Enter Mnemonic...'}
+value={watch('recoveryPhrase')}
+onChange={(e)=> setValue('recoveryPhrase', e.target.value)}
 />
+
+
+{formState.errors.recoveryPhrase &&
+<p className='plasmo-text-red-500 plasmo-text-sm plasmo-font-semibold'>
+{formState.errors.recoveryPhrase.message}
+</p>}
 
     </div>
 
@@ -92,9 +107,14 @@ Password
 className='plasmo-rounded-lg plasmo-border-secondary plasmo-border-2 plasmo-w-full plasmo-bg-accent plasmo-text-white plasmo-p-2
 placeholder:plasmo-text-white'
 {...register('password')}
-placeholder={'Enter Password'}
+placeholder={'Enter Password....'}
 
 />
+{formState.errors.password &&
+<p className='plasmo-text-red-500 plasmo-font-semibold plasmo-text-sm'>
+{formState.errors.password.message}
+</p>
+}
     </div>
 </div>
 

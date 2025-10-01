@@ -15,6 +15,7 @@ type Props = {}
 
 function Router({}: Props) {
   const selector = useAppSelector((state)=>state.loggedIn.encryptedWallet);
+  const currentSessionAddress= useAppSelector((state)=>state.loggedIn.address);
 
   const dispatch =useAppDispatch();
 
@@ -31,7 +32,7 @@ function Router({}: Props) {
     if(typeof loadedCurrentNetwork !== 'undefined') dispatch(setCurrentNetwork({...loadedCurrentNetwork}));
 
     
-  },[]);
+  },[selector]);
 
 
   useEffect(()=>{
