@@ -52,7 +52,7 @@ function TransferTokenForm({maxAmountToSend, tokenType, setTokenType, setMaxAmou
     },[fetchERC721s]);
     
     const zodERC20TxSchema= z.object({
-    erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).optional(),
+    erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).nullish().optional(),
     receiverAddress: z.string().startsWith("0x",{'error': 'Invalid Receiver Address !'}).length(42, {'error':'Invalid length of receiver contract'}),
     tokenAmountToBeSent: z.number({'error':'Invalid type'}).lte(maxAmountToSend, {'error':'The provided number is larger than the all possible amount.'}).gt(0, {'error':'Has to be greater than 0.'})
     }).required({receiverAddress:true, tokenAmountToBeSent:true});
@@ -78,8 +78,13 @@ function TransferTokenForm({maxAmountToSend, tokenType, setTokenType, setMaxAmou
   
 
 
-      const getGasFee= async (isContractCall:boolean, isNFT?:boolean, txTemplate?:ethers.TransactionRequest)=>{
+      const getGasFee= async ()=>{
         try {
+
+
+ const isNotContractTx=!watch('erc20TokenAddress') && !nftWatch('nftTokenAddress');
+const isNFT = nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim().length !== 0;
+console.log({isNotContractTx, isNFT});
 
         const isValid= await bcrypt.compare(password, passwordOfSession);
 
@@ -112,7 +117,7 @@ alert('Something went wrong with gas estimation');
         }
 
 
-        if(isContractCall){
+        if(!isNotContractTx){
         let contract:ethers.Contract;
         if(isNFT){
           const nftInterface = new ethers.Interface(erc721Abi);
@@ -180,8 +185,10 @@ alert('Something went wrong with gas estimation');
       }
     
       console.log(out);
-    
-      return out;
+    setGasFeesOptions(out);
+      setIsLoading(false);
+          setCurrentStep(1);
+          setOpenModal(false);
         }
     
         console.log('ERC20 starts');
@@ -274,13 +281,14 @@ alert('Something went wrong with gas estimation');
         };
       }
     
-            console.log(out);
-    
-          return out;
+                setGasFeesOptions(out);
+                  setIsLoading(false);
+          setCurrentStep(1);
+          setOpenModal(false);
         }
     
-        if(txTemplate){
-          const txForEstimation={...txTemplate};
+   
+          const txForEstimation={from:publicAddress, to:watch('receiverAddress'), value: BigInt(watch('tokenAmountToBeSent') * (10 ** 18))};
     
           const estimatedGasLimit = await decryptedWallet.estimateGas(txForEstimation);
       
@@ -304,12 +312,10 @@ alert('Something went wrong with gas estimation');
           };
         }
       
-        return {
-          baseFeePerGas: gasFeeBase.toString(),
-          currentTip: ethers.parseUnits("2", "gwei").toString(),
-          suggestions
-        };
-        }
+     setGasFeesOptions(suggestions);
+          setIsLoading(false);
+          setCurrentStep(1);
+          setOpenModal(false);
     
     
         } catch (error) {
@@ -345,19 +351,9 @@ alert('Something went wrong with gas estimation');
           return;
         }
 
-        const isNotContractTx=((watch('erc20TokenAddress') && watch('erc20TokenAddress').trim().length === 0) || (nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim().length === 0));
-const isNFT = nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim().length !== 0;
+        await getGasFee();
 
 
-        const information = await getGasFee(!isNotContractTx, isNFT,  isNotContractTx && {from:publicAddress, to:watch('receiverAddress') || nftWatch('receiverAddress'), value: BigInt(watch('tokenAmountToBeSent') * (10 ** 18))});
-
-if(information){
-  setIsLoading(false);
-          setGasFeesOptions(information);
-          setCurrentStep(1);
-          setOpenModal(false);
-return;
-}
     
        } catch (error) {
         alert(error);
@@ -419,8 +415,10 @@ console.log(nftElements);
 </div>
 
 {tokenType === 'ERC20' && 
+<>
 <div className="plasmo-flex plasmo-gap-2">
   <input
+  disabled={maxAmountToSend === 0}
   {...register('tokenAmountToBeSent')}
   onChange={(e)=>{
     
@@ -432,7 +430,7 @@ type='number'
   max={maxAmountToSend}
   placeholder='Amount to be sent'
   className='plasmo-bg-accent
-  plasmo-w-full
+  plasmo-w-full disabled:plasmo-opacity-50
   plasmo-p-2 plasmo-rounded-lg plasmo-border plasmo-border-secondary plasmo-text-white'/>
   <DropdownMenu.Root>
 	<DropdownMenu.Trigger
@@ -505,6 +503,12 @@ currentNetworkNativeTokenSymbol
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 </div>
+
+<p className='plasmo-text-sm plasmo-font-light plasmo-text-white'>Max Amount: <span className='plasmo-text-secondary plasmo-font-bold'>
+  {(maxAmountToSend).toFixed(4)}
+  </span>
+  </p>
+</>
 }
 
 {tokenType === 'NFT' &&

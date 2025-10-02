@@ -13,7 +13,7 @@ const [password, setPassword]=useState<string>();
 const [gasFeeOptions, setGasFeeOptions]=useState<any>(null);
 
   const zodERC20TxSchema= z.object({
-    erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).optional(),
+    erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).nullish().optional(),
     receiverAddress: z.string().startsWith("0x",{'error': 'Invalid Receiver Address !'}).length(42, {'error':'Invalid length of receiver contract'}),
     tokenAmountToBeSent: z.number({'error':'Invalid type'}).lte(maxAmountToSend, {'error':'The provided number is larger than the all possible amount.'}).gt(0, {'error':'Has to be greater than 0.'}),
     }).required({receiverAddress:true, tokenAmountToBeSent:true});
@@ -29,7 +29,7 @@ const [gasFeeOptions, setGasFeeOptions]=useState<any>(null);
     const erc20Methods =useForm<z.infer<typeof zodERC20TxSchema>>({
         resolver: zodResolver(zodERC20TxSchema),
         defaultValues:{
-          'erc20TokenAddress':'',
+          'erc20TokenAddress':null,
           'receiverAddress':'',
           'tokenAmountToBeSent': Number(0),
         }
