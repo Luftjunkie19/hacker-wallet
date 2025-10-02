@@ -22,16 +22,17 @@ type Props = {
   setPassword:(input:string)=>void,
   password:string,
   setGasFeesOptions:(input:any)=>void,
+  tokenType:'ERC20' | 'NFT',
+  setTokenType:(input:'ERC20' | 'NFT')=>void
 }
 
 
 
-function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep, setPassword, password, setGasFeesOptions}: Props) {
+function TransferTokenForm({maxAmountToSend, tokenType, setTokenType, setMaxAmountToSend, setCurrentStep, setPassword, password, setGasFeesOptions}: Props) {
     // Imported NFTs
     const [importedNfts, setImportedNfts]=useState<any[]>([]);  
     const publicAddress = useAppSelector((state)=>state.loggedIn.address);
     const currentNetworkNativeTokenSymbol= useAppSelector((state)=>state.currentNetworkConnected.currencySymbol);
-    const [tokenType, setTokenType]=useState<"ERC20" | "NFT">("ERC20"); 
     const [isLoading, setIsLoading]=useState<boolean>(false);
     const [openModal, setOpenModal]=useState<boolean>(false);
     const {tokens}=useFetchTokensData();
@@ -79,14 +80,12 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
 
       const getGasFee= async (isContractCall:boolean, isNFT?:boolean, txTemplate?:ethers.TransactionRequest)=>{
         try {
-          setIsLoading(true);
 
         const isValid= await bcrypt.compare(password, passwordOfSession);
 
         if(!isValid){
           alert('Invalid Password !');
-               setIsLoading(false);
-          return;
+          throw new Error("Invalid Password !");
         }
 
           const provider = new ethers.JsonRpcProvider(rpcURL);
@@ -95,8 +94,7 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
 
           if(!walletToDecrypt){
             alert('Something went wrong with action authentication.');
-            setIsLoading(false);
-            return;
+            throw new Error("Couldn't decrypt the wallet with the provided password");
           }
 
           const decryptedWallet = new ethers.Wallet(walletToDecrypt.privateKey, provider);
@@ -109,19 +107,31 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
         const gasFeeBase= block.baseFeePerGas;
     
         if(!gasFeeBase) {
-          setIsLoading(false);
+alert('Something went wrong with gas estimation');
           throw new Error("Provider does not serve with the base of gas fee");
         }
+
 
         if(isContractCall){
         let contract:ethers.Contract;
         if(isNFT){
           const nftInterface = new ethers.Interface(erc721Abi);
           contract = new ethers.Contract(nftWatch('nftTokenAddress'), nftInterface, decryptedWallet);
+
+         const approvalTx = await contract.approve(nftWatch('receiverAddress'), BigInt(nftWatch('tokenId')));
+
+          const approvalReceipt = await approvalTx.wait();
+
+          console.log(approvalReceipt);
+
+          if(!approvalReceipt){
+  alert('Something went wrong with approval of NFT');
+            return;
+          }
     
               console.log(contract.interface.getFunction('safeTransferFrom'), 'function exists');
     const contractAddr= await contract.getAddress();
-    const data = contract.interface.encodeFunctionData("safeTransferFrom", [publicAddress, watch('receiverAddress'), watch('tokenAmountToBeSent')]);
+    const data = contract.interface.encodeFunctionData("safeTransferFrom", [publicAddress, watch('receiverAddress'), BigInt(nftWatch('tokenId'))]);
     const populatedTransaction:ethers.TransactionRequest = { to: contractAddr,from: publicAddress, data };
     
     
@@ -133,7 +143,6 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
       // 3. fee data
       const block = await provider.getBlock("latest");
       if (!block?.baseFeePerGas) {
-        setIsLoading(false);
         throw new Error("Network doesn't expose baseFee (not EIP-1559)");
       }
       const baseFee = BigInt(block.baseFeePerGas);
@@ -188,37 +197,38 @@ function TransferTokenForm({maxAmountToSend, setMaxAmountToSend, setCurrentStep,
     
           if(!decimals){
             alert("There are no decimals of the token");
-                 setIsLoading(false);
-            return;
+            throw new Error("Token doesn't have any decimals");
+      
           }
 
-console.log(Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals)));          
-          
+          console.log(Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals)), Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals)) / (10 ** Number(decimals)) );          
+
           const contractAddr= await contract.getAddress();
     
           const amountToBeSentInNumber= Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals));
           
           const amountToBeSent= BigInt(amountToBeSentInNumber);
-          
-          const allowanceTo= await contract.approve(watch('receiverAddress'), amountToBeSent);
-    
-          const tx = await allowanceTo.wait();
-    
-          console.log(tx);
 
-          if(!tx){
-            alert('Allowance has been reverted');
-                 setIsLoading(false);
-            return;
-          }
+          console.log(amountToBeSent, decimals, amountToBeSentInNumber);
           
-          const data = contract.interface.encodeFunctionData("transferFrom", [publicAddress, watch('receiverAddress'), amountToBeSent]);
-          
+
+          const data = contract.interface.encodeFunctionData("transfer", [watch('receiverAddress'), amountToBeSent]);
+
+          console.log(data, 'data for transfer');
+
           const populatedTransaction:ethers.TransactionRequest = { to: contractAddr, from: publicAddress, data };
     
           console.log(populatedTransaction);
     
+          
           const estimateGas= await decryptedWallet.estimateGas(populatedTransaction);
+
+          if(!estimateGas){
+            alert('Something went wrong with gas estimation');
+            throw new Error("Gas estimation failed");
+          }
+
+          console.log(estimateGas, 'gas estimate');
     
     
           const gasLimit = BigInt(estimateGas) * 102n / 100n; // add 2% buffer
@@ -226,7 +236,7 @@ console.log(Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals)));
       // 3. fee data
       const block = await provider.getBlock("latest");
       if (!block?.baseFeePerGas){
-     setIsLoading(false);
+        alert('Something went wrong with gas estimation');
         throw new Error("Network doesn't expose baseFee (not EIP-1559)");
 
       } 
@@ -304,10 +314,7 @@ console.log(Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals)));
     
         } catch (error) {
           console.log(error);
-          setIsLoading(false);
           alert(error);
-        }finally{
-               setIsLoading(false);
         }
       }
     
@@ -328,21 +335,25 @@ console.log(Number(watch('tokenAmountToBeSent')) * (10 ** Number(decimals)));
         
          if(watch('tokenAmountToBeSent') && maxAmountToSend && (maxAmountToSend < watch('tokenAmountToBeSent') || watch('tokenAmountToBeSent') === 0)){
           alert("You are not able to send the provided amount");
+         setIsLoading(false);
           return;
         }
     
         if( (nftWatch('receiverAddress').length !== 42 && !nftWatch('receiverAddress').startsWith('0x')) ||  (watch('receiverAddress').length !== 42 && !watch('receiverAddress').startsWith("0x"))){
           alert("You haven't provided a valid address");
+          setIsLoading(false);
           return;
         }
-    
-        const isNotContractTx=((watch('erc20TokenAddress') && watch('erc20TokenAddress').trim() !== '') || (nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim() !== ''));
-        
-        const information = await getGasFee(isNotContractTx, nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim() !== '',  !isNotContractTx && {from:publicAddress, to:watch('receiverAddress') || nftWatch('receiverAddress'), value: watch('erc20TokenAddress') && watch('tokenAmountToBeSent') ? BigInt(0) : BigInt(watch('tokenAmountToBeSent') * (10 ** 18))});
-    
+
+        const isNotContractTx=((watch('erc20TokenAddress') && watch('erc20TokenAddress').trim().length === 0) || (nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim().length === 0));
+const isNFT = nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim().length !== 0;
+
+
+        const information = await getGasFee(!isNotContractTx, isNFT,  isNotContractTx && {from:publicAddress, to:watch('receiverAddress') || nftWatch('receiverAddress'), value: BigInt(watch('tokenAmountToBeSent') * (10 ** 18))});
+
 if(information){
+  setIsLoading(false);
           setGasFeesOptions(information);
-    
           setCurrentStep(1);
           setOpenModal(false);
 return;
@@ -351,9 +362,8 @@ return;
        } catch (error) {
         alert(error);
         console.log(error);
-       } finally{
-        setIsLoading(false);
-       }
+      setIsLoading(false); 
+      }
       
       }
     
@@ -445,6 +455,7 @@ type='number'
 		{
       tokens.map((element, index)=>(
                 		<DropdownMenu.Item
+                    key={index}
                     id={element.tokenAddress}
             className={`
             plasmo-text-white plasmo-flex plasmo-items-center plasmo-gap-2
@@ -470,7 +481,7 @@ plasmo-font-semibold
 '
 >
 {
-(Number(element.tokenBalance) / element.tokenMetadata.decimals ? 10 ** element.tokenMetadata.decimals : 10 ** 18 ).toFixed(4)
+(Number(element.tokenBalance) / (10 ** (element.tokenMetadata.decimals ?? 18))).toFixed(4)
 }
 </p>
 

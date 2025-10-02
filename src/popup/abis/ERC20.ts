@@ -104,7 +104,9 @@ export const erc20Abi=[
     "stateMutability": "view",
     "type": "function"
   },
-   {"type":"function","name":"transfer","inputs":[{"name":"to","type":"address","internalType":"address"},{"name":"amount","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},
+   {"type":"function","name":"transfer",
+    "inputs":[{"name":"to","type":"address","internalType":"address"},
+      {"name":"amount","type":"uint256","internalType":"uint256"}],"outputs":[{"name":"","type":"bool","internalType":"bool"}],"stateMutability":"nonpayable"},
   {
     "constant": true,
     "inputs": [

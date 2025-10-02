@@ -6,7 +6,7 @@ import TransferTokenForm from '~popup/component/forms/transfer/TransferTokenForm
 import TransactionSummary from '~popup/component/TransactionSummary';
 
 function TransferScreen() {
-
+const [tokenType, setTokenType]=useState<'ERC20' | 'NFT'>('ERC20');
   const [currentStep, setCurrentStep]=useState<number>(0);
 const [maxAmountToSend, setMaxAmountToSend]=useState<number>(0);
 const [password, setPassword]=useState<string>();
@@ -47,14 +47,16 @@ const [gasFeeOptions, setGasFeeOptions]=useState<any>(null);
   
   
   return (
-<FormProvider {...nftMethods}> 
-  <FormProvider {...erc20Methods}>
+<FormProvider {...(tokenType === 'ERC20' ? erc20Methods : nftMethods)}> 
+
     <>
 
 {
   currentStep === 0 &&
   <>
   <TransferTokenForm
+  tokenType={tokenType}
+  setTokenType={setTokenType}
   password={password}
   setPassword={setPassword}
    setCurrentStep={setCurrentStep} 
@@ -74,7 +76,7 @@ currentStep === 1 && <TransactionSummary gasFeesOptions={gasFeeOptions} password
       
     </>
   </FormProvider>
-</FormProvider>
+
 
   )
 }
