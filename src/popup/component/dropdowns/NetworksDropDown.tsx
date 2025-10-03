@@ -62,7 +62,7 @@ function NetworksDropDown({}: Props) {
   plasmo-flex plasmo-flex-col plasmo-gap-2
   ">
 {networksArray.map((network)=>(
-        <DropdownMenu.Item onClick={async ()=>{
+        <DropdownMenu.Item key={network.chainId} onClick={async ()=>{
 
           await saveKey('currentConnectedNetwork', {...network})
 
