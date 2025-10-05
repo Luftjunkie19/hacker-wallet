@@ -54,12 +54,9 @@ const navigate=useNavigate();
     <div className="plasmo-gap-12 plasmo-flex 
    plasmo-justify-between plasmo-w-full
     plasmo-items-center">
-           <div
-           onClick={()=>navigate('/')}>
-              <img src={require('../icon.png')} width={56}height={56}className="plasmo-w-12 plasmo-cursor-pointer plasmo-h-12 plasmo-rounded-lg" alt="HackerWallet Logo" />
-    
+<div onClick={()=>navigate('/')}>
+<img src={require('../icon.png')} width={56}height={56}className="plasmo-w-12 plasmo-cursor-pointer plasmo-h-12 plasmo-rounded-lg" alt="HackerWallet Logo" />    
       </div>
-
 
 {
   isLoggedIn &&

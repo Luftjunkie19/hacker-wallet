@@ -44,7 +44,9 @@ try {
     <div className='plasmo-flex plasmo-flex-col plasmo-gap-3 plasmo-overflow-y-auto plasmo-h-72 plasmo-w-full'>
  
         {publicAddress && transactions && transactions.length > 0  && <>
-        {transactions.map((tx, index)=>(<div id={`${index}`} className='plasmo-text-white plasmo-max-w-80 plasmo-w-full plasmo-flex plasmo-items-center 
+        {transactions.map((tx, index)=>(<div
+        key={index}
+        id={`${index}`} className='plasmo-text-white plasmo-max-w-80 plasmo-w-full plasmo-flex plasmo-items-center 
         plasmo-rounded-lg
         plasmo-gap-3 plasmo-cursor-pointer plasmo-bg-accent plasmo-p-3'>
           <div className="plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-w-2/3">

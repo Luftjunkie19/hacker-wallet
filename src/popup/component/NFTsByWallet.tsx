@@ -128,6 +128,7 @@ plasmo-gap-2'>
     <> 
     {nftElements.map((element, index)=>(
 <LoadedNFTElement
+key={index}
 element={element}
 index={index}
 />

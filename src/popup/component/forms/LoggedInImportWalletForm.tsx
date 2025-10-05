@@ -35,7 +35,7 @@ const sessionPassword= useAppSelector((state)=>state.loggedIn.password);
             'recoveryPhrase':''
         },
         resolver: zodResolver(importWalletSchema)
-    });
+    }); 
 
     const handleImportWallet= async ()=>{
         try {

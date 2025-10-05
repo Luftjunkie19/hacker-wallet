@@ -103,7 +103,9 @@ onClick={handleUploadERC20Token}
  {publicAddress && tokens && tokens.length > 0 &&
       <div className='plasmo-flex plasmo-flex-col plasmo-w-full plasmo-h-64 plasmo-gap-4 plasmo-overflow-y-auto plasmo-bg-primary'> 
       {tokens.map((element, index)=>(
-        <Erc20Element tokenAmount={((Number(element.tokenBalance)) /  (10 ** (element.tokenMetadata.decimals ?? 18))).toFixed(2)} 
+        <Erc20Element
+        key={index}
+        tokenAmount={((Number(element.tokenBalance)) /  (10 ** (element.tokenMetadata.decimals ?? 18))).toFixed(2)} 
         tokenAddress={element.tokenAddress}
         symbol={element.tokenMetadata.symbol}
         tokenName={element.tokenMetadata.name}

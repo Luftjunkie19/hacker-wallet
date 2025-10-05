@@ -21,14 +21,14 @@ function SettingsDropDown({openSensitiveModal, logoutFromWallet}: Props) {
   return (
  <DropdownMenu.Root>
     <DropdownMenu.Trigger>
-    <button>
+
      <FaGear
      className='
      plasmo-text-secondary
      plasmo-text-2xl
      '
      />
- </button>
+
  
     </DropdownMenu.Trigger>
     <DropdownMenu.Content className='plasmo-bg-accent plasmo-justify-between plasmo-mr-16 plasmo-mt-6 plasmo-h-64 plasmo-overflow-auto plasmo-max-w-52 plasmo-w-full plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-text-white plasmo-p-3 plasmo-rounded-lg plasmo-border plasmo-border-secondary'>
