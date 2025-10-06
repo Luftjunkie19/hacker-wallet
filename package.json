@@ -50,11 +50,18 @@
     "typescript": "5.3.3"
   },
   "manifest": {
-   "permissions":["activeTab","scripting","background",
-   "contextMenus", "tabs", "background"
+   "permissions": [ 
+  "contextMenus",
+ "activeTab",
+"storage",
+"runtime",
+   "scripting",
+   "background",
+    "sessions", 
+    "runtime"
   ],
     "host_permissions": [
-      "<all_urls>"
+ "http://localhost:3000/*"
     ]
   }
 }
