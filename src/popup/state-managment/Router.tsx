@@ -37,10 +37,28 @@ function Router({}: Props) {
  
 
   useEffect(()=>{
- 
 
     loadElement();
   },[loadElement]);
+
+
+useEffect(()=>{
+  
+window.addEventListener('message', (ev)=>{
+  if(ev.data.target === 'extension-popup'){
+    console.log('Hello');
+  }
+});
+
+return ()=> window.removeEventListener('message', (ev)=>{
+  if(ev.data.target === 'extension-popup'){
+    console.log('Hello');
+  }
+})
+
+
+
+},[])
 
 
   return (

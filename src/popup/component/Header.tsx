@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 
 import {  useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
@@ -19,6 +19,7 @@ function Header() {
     const [openState, setOpenState]=useState<boolean>(false);
     const [password, setPassword]=useState<string>();
     const [accountDetails, setAccountDetails]=useState<{mnemonic:string, privateKey:string}>();
+const navigate=useNavigate();
 
     const logoutFromWallet= async ()=>{
 await deleteKey('session');
@@ -44,7 +45,6 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
       setPassword(null);
       }
     }
-const navigate=useNavigate();
 
 
 

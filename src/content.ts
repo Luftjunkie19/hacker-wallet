@@ -4,7 +4,10 @@ export {}
     window.hackerWallet={
         name:"Hacker Wallet",
         id:'hackerWallet',
-        on:()=>{},
+        request: async({method:string, params:any})=>{},
+        on:(event:string, handler)=>{},
+        removeListener:(event:string, handler)=>{},
+        isHackerWallet:true,
     }
 
 

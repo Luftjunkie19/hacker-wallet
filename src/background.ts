@@ -8,7 +8,8 @@ console.log('Call now here');
 chrome.runtime.onMessage.addListener(async(
    message, sender,sendResponse
 )=>{
-const dbName="web3-wallet-data";
+try {
+    const dbName="web3-wallet-data";
 const VER=1; const 
 sessionDb= async ()=>{
     return openDB(dbName, VER, {
@@ -26,12 +27,28 @@ console.log(element);
 console.log(message);
 
 if(message.method === "eth_connectWallet"){
-    chrome.action.openPopup();
 
-//  await chrome.runtime.sendMessage({
-//         target:'hackerWallet-extension',
-//         method:message.method
-//     });
+     const messageSent =  await chrome.runtime.sendMessage({
+        method:message.method,
+        target:'extension-popup'
+    });
+
+    console.log(messageSent, 'Message sent');
+
+    if(messageSent){
+
+        chrome.action.openPopup();
+    }
+
+
+
+
+       
+}
+
+
+} catch (error) {
+    console.log(error, 'Background error'); 
     
 }
 });
