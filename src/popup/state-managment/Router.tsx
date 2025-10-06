@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from './ReduxWrapper';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import CreateNewWallet from '~popup/NoWalletScreens/CreateNewWallet';
 import Home from '~popup/LogggedInScreens/Home';
 import RestoreWallet from '../NoWalletScreens/RestoreWallet';
@@ -16,7 +16,6 @@ type Props = {}
 function Router({}: Props) {
   const selector = useAppSelector((state)=>state.loggedIn.encryptedWallet);
   const currentSessionAddress= useAppSelector((state)=>state.loggedIn.address);
-
   const dispatch =useAppDispatch();
 
   const loadElement=useCallback(async ()=>{
@@ -35,7 +34,11 @@ function Router({}: Props) {
   },[selector]);
 
 
+ 
+
   useEffect(()=>{
+ 
+
     loadElement();
   },[loadElement]);
 

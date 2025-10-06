@@ -8,7 +8,6 @@ console.log('Call now here');
 chrome.runtime.onMessage.addListener(async(
    message, sender,sendResponse
 )=>{
-
 const dbName="web3-wallet-data";
 const VER=1; const 
 sessionDb= async ()=>{
@@ -24,15 +23,15 @@ const element = await db.get("web3-wallet-data", "currentConnectedNetwork");
 
 console.log(element);
 
-    console.log('Message received');
-    console.log(message);
-    console.log(sender);
+console.log(message);
 
-    sendResponse({
-        network:element.networkName,
-        url:element.rpcURL,
-        from:'Background'
-    });
+if(message.method === "eth_connectWallet"){
+    chrome.action.openPopup();
 
-
-})
+//  await chrome.runtime.sendMessage({
+//         target:'hackerWallet-extension',
+//         method:message.method
+//     });
+    
+}
+});
