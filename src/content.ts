@@ -3,11 +3,15 @@ export {}
 (function (){
     window.hackerWallet={
         name:"Hacker Wallet",
+        selectedAddress: undefined,
         id:'hackerWallet',
         request: async({method:string, params:any})=>{},
-        on:(event:string, handler)=>{},
-        removeListener:(event:string, handler)=>{},
+        on:(event:"accountsChanged" | "chainChanged" | "connect" | "disconnect" | "message", handler)=>{},
+        removeListener:(event:string, handler:(payload:any)=>void)=>{},
+        connect:async()=>{},
+        getChainId: async()=>{},
         isHackerWallet:true,
+        isConnected:()=>{}
     }
 
 
