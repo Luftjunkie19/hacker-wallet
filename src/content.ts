@@ -1,6 +1,11 @@
 export {}
 
 (function (){
+
+const pending = new Map();
+const listeners = new Map();
+
+
     window.hackerWallet={
         name:"Hacker Wallet",
         selectedAddress: undefined,
@@ -24,7 +29,10 @@ window.addEventListener('message', (event)=>{
 if(event.data.target === 'hackerWallet'){
 
     chrome.runtime.sendMessage(
-        event.data
+        {
+            ...event.data,
+            origin: event.origin
+        }
     );
 
 }
