@@ -1,50 +1,33 @@
 
-import {openDB} from 'idb';
-
 export {}
 
 console.log('Call now here');
+
 
 chrome.runtime.onMessage.addListener(async(
    message, sender,sendResponse
 )=>{
 try {
-    const dbName="web3-wallet-data";
-const VER=1; const 
-sessionDb= async ()=>{
-    return openDB(dbName, VER, {
-        upgrade(database) {
-            if(!database.objectStoreNames.contains("web3-wallet-data")) database.createObjectStore('web3-wallet-data');
-        },
-    })
-};
 
-const db= await sessionDb();
-const element = await db.get("web3-wallet-data", "currentConnectedNetwork");
+if(message.type === "request"){
 
-console.log(element);
+     const messageSent = await chrome.runtime.sendMessage({ hackerWallet:true, from:'background', type:'pending', id:message.id, origin: message.origin, payload: message });
 
-console.log(message);
+    chrome.action.openPopup();
 
-if(message.method === "eth_connectWallet"){
-
-     const messageSent =  await chrome.runtime.sendMessage({
-        method:message.method,
-        target:'extension-popup'
-    });
-
-    console.log(messageSent, 'Message sent');
-
-    if(messageSent){
-
-        chrome.action.openPopup();
-    }
-
-
-
-
-       
+    console.log('Message sent to popup', messageSent);      
 }
+
+
+if(message.type === 'response' && message.from === 'hackerWallet-popup'){
+    const sentMessage =
+  await chrome.runtime.sendMessage({...message, hackerWallet:true,
+    to: 'hacker-walletContent'
+  });
+
+  console.log(sentMessage);
+}
+
 
 
 } catch (error) {

@@ -54,7 +54,16 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
     <div className="plasmo-gap-12 plasmo-flex 
    plasmo-justify-between plasmo-w-full
     plasmo-items-center">
-<div onClick={()=>navigate('/')}>
+<div onClick={async()=>{
+
+chrome.runtime.sendMessage({type:"response", from:'hackerWallet-popup', payload:{
+  message:'HELLO'
+}},()=>{
+  console.log('Message got sent');
+}
+);
+
+}}>
 <img src={require('../icon.png')} width={56}height={56}className="plasmo-w-12 plasmo-cursor-pointer plasmo-h-12 plasmo-rounded-lg" alt="HackerWallet Logo" />    
       </div>
 
