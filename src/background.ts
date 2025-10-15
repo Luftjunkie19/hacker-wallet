@@ -1,7 +1,7 @@
-
 export {}
 
 console.log('Call now here');
+
 
 
 chrome.runtime.onMessage.addListener(async(
