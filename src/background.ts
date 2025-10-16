@@ -1,37 +1,15 @@
 export {}
 
-console.log('Call now here');
+import { fetchContainingKeywordElements } from "~popup/IndexedDB/WalletDataStorage"
 
+console.log('Hello from Background');
 
+chrome.tabs.onActivated.addListener(async(activeInfo)=>{
+    console.log(activeInfo);
 
-chrome.runtime.onMessage.addListener(async(
-   message, sender,sendResponse
-)=>{
-try {
+    const loadedKeys = await fetchContainingKeywordElements();
 
-if(message.type === "request"){
+    console.log(loadedKeys);
 
-     const messageSent = await chrome.runtime.sendMessage({ hackerWallet:true, from:'background', type:'pending', id:message.id, origin: message.origin, payload: message });
-
-    chrome.action.openPopup();
-
-    console.log('Message sent to popup', messageSent);      
-}
-
-
-if(message.type === 'response' && message.from === 'hackerWallet-popup'){
-    const sentMessage =
-  await chrome.runtime.sendMessage({...message, hackerWallet:true,
-    to: 'hacker-walletContent'
-  });
-
-  console.log(sentMessage);
-}
-
-
-
-} catch (error) {
-    console.log(error, 'Background error'); 
-    
-}
 });
+

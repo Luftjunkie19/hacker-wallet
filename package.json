@@ -53,6 +53,7 @@
    "permissions": [ 
   "contextMenus",
  "activeTab",
+ "tabs",
 "storage",
 "runtime",
    "scripting",
@@ -61,8 +62,7 @@
     "runtime"
   ],
     "host_permissions": [
-  "http://*/*",
-  "https://*/*"
+"<all_urls>"
     ]
   }
 }
