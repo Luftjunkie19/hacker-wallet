@@ -23,21 +23,22 @@ function emitEvent(event, payload){
         payload
      }){
     try {
-      console.log(payload, method);
       const handlerRequest = await sendToBackground(
 {'name':'conveyer', 
   extensionId:'cnlaimnmamfapmfkepefbemobinoaobf', 
   body:{
+    from:'hackerWallet-connector',
 method,
 payload
 }
 });     
+
+console.log(handlerRequest, 'handler Request');
       
     } catch (error) {
       console.log(error);
     }
     },
-    getChainId(){  },
     on(event, handler){
 
     },
