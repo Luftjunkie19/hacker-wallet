@@ -10,12 +10,10 @@ import { setCurrentWallet } from './slices/LoggedInWallet';
 import TransferScreen from '~popup/LogggedInScreens/TransferScreen';
 import Header from '~popup/component/Header';
 import { setCurrentNetwork } from './slices/CurrentWalletNetwork';
-
 type Props = {}
 
 function Router({}: Props) {
   const selector = useAppSelector((state)=>state.loggedIn.encryptedWallet);
-  const currentSessionAddress= useAppSelector((state)=>state.loggedIn.address);
   const dispatch =useAppDispatch();
 
   const loadElement=useCallback(async ()=>{
@@ -42,23 +40,7 @@ function Router({}: Props) {
   },[loadElement]);
 
 
-useEffect(()=>{
-  
-window.addEventListener('message', (ev)=>{
-  if(ev.data.target === 'extension-popup'){
-    console.log('Hello');
-  }
-});
 
-return ()=> window.removeEventListener('message', (ev)=>{
-  if(ev.data.target === 'extension-popup'){
-    console.log('Hello');
-  }
-})
-
-
-
-},[])
 
 
   return (

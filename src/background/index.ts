@@ -1,6 +1,6 @@
 export {}
 
-import { fetchContainingKeywordElements } from "~popup/IndexedDB/WalletDataStorage"
+import { fetchContainingKeywordElements, loadKey } from "~popup/IndexedDB/WalletDataStorage"
 
 console.log('Hello from Background');
 
@@ -12,4 +12,7 @@ chrome.tabs.onActivated.addListener(async(activeInfo)=>{
     console.log(loadedKeys);
 
 });
+
+
+
 

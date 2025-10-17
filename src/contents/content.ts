@@ -1,4 +1,5 @@
 import type {PlasmoCSConfig} from 'plasmo';
+import {sendToBackground} from '@plasmohq/messaging';
 
 export const config:PlasmoCSConfig={
     matches:['<all_urls>'],
@@ -22,13 +23,20 @@ function emitEvent(event, payload){
         payload
      }){
     try {
-     console.log(method, payload);
+      console.log(payload, method);
+      const handlerRequest = await sendToBackground(
+{'name':'conveyer', 
+  extensionId:'cnlaimnmamfapmfkepefbemobinoaobf', 
+  body:{
+method,
+payload
+}
+});     
       
     } catch (error) {
       console.log(error);
     }
     },
-    connect(){ },
     getChainId(){  },
     on(event, handler){
 
@@ -39,5 +47,3 @@ function emitEvent(event, payload){
   };
 
 })();
-
-

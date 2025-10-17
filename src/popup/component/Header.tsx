@@ -4,13 +4,16 @@ import {  useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
 import { useNavigate } from 'react-router-dom';
 import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/WalletDataStorage';
-
+import {usePort} from '@plasmohq/messaging/hook';
 import { ethers } from 'ethers';
 import bcrypt  from 'bcryptjs';
 import NetworksDropDown from './dropdowns/NetworksDropDown';
 import SettingsDropDown from './dropdowns/SettingsDropDown';
 import HeaderModal from './modals/HeaderModal';
 import WalletModal from './WalletModal';
+import { sendToBackground } from '@plasmohq/messaging';
+import Modal from './modals/Modal';
+import { Button } from '@radix-ui/themes';
 
 function Header() {
     const isLoggedIn= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
@@ -48,20 +51,39 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
 
 
 
+const conveyerPort= usePort('portHandler');
 
+    return (<>
+{conveyerPort && conveyerPort.data && <Modal
+title='Confirm External Message'>
+<div className="">
 
-    return (
+<Button
+onClick={()=>{
+  conveyerPort.send({
+    responseBack:'Hello from Popup'
+  })
+}}
+>
+  Hello
+</Button>
+
+</div>
+</Modal>
+}
     <div className="plasmo-gap-12 plasmo-flex 
    plasmo-justify-between plasmo-w-full
     plasmo-items-center">
-<div onClick={async()=>{
+<div onClick={async ()=>{
 
-chrome.runtime.sendMessage({type:"response", from:'hackerWallet-popup', payload:{
-  message:'HELLO'
-}},()=>{
-  console.log('Message got sent');
-}
-);
+const message = await sendToBackground({
+  'body':{
+    message:'Hello from popup.'
+  },'name':'conveyer', 
+  'sender':{'origin':"extension-popup"
+  }});
+
+  console.log(message);
 
 }}>
 <img src={require('../icon.png')} width={56}height={56}className="plasmo-w-12 plasmo-cursor-pointer plasmo-h-12 plasmo-rounded-lg" alt="HackerWallet Logo" />    
@@ -97,6 +119,7 @@ isLoggedIn &&
       
       }
       </div>
+    </>
   )
 }
 
