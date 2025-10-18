@@ -4,7 +4,7 @@ import {  useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
 import { useNavigate } from 'react-router-dom';
 import { deleteKey, loadKey } from '~popup/IndexedDB/WalletDataStorage';
-import {usePort} from '@plasmohq/messaging/hook';
+import {useMessage, usePort} from '@plasmohq/messaging/hook';
 import { ethers } from 'ethers';
 import bcrypt  from 'bcryptjs';
 import NetworksDropDown from './dropdowns/NetworksDropDown';
@@ -32,19 +32,6 @@ await deleteKey('currentConnectedNetwork');
 navigate('/');
     }
 
-
-    const externalCallModalCheck= useCallback(async ()=>{
-      const existingRequestElement = await loadKey('request_data');
-
-      if(existingRequestElement){
-      setOpenInternalModalInteraction(true);
-      setRequestingObj(existingRequestElement);
-      }
-
-    },[]);
-
-
-
     const handleGetAccountDetails= async ()=>{
 
 const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
@@ -62,27 +49,24 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
       }
     }
 
+ const {
+  send,
+  data,
+  listen
+ }=usePort('portHandler');
 
-const conveyerPort= usePort('portHandler');
-
-useEffect(()=>{
-
- externalCallModalCheck();
-
-
-},[externalCallModalCheck]);
 
     return (<>
 {openExternalModalInteraction && existingRequestObj && <div className='plasmo-bg-accent/80 plasmo-absolute plasmo-flex plasmo-flex-col plasmo-gap-3
 plasmo-top-0 plasmo-items-center plasmo-justify-between plasmo-left-0 plasmo-w-full plasmo-h-full plasmo-rounded-lg plasmo-p-2'>
-{existingRequestObj.body.method === 'eth_requestAccounts' && 
+
 <>
 <div className="plasmo-flex plasmo-flex-col plasmo"></div>
 
 
 <button className='plasmo-text-secondary hover:plasmo-bg-secondary hover:plasmo-text-primary hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-primary plasmo-p-2 plasmo-rounded-lg plasmo-w-64'>Approve</button>
 </>
-}
+
 </div>
 }
 <div className="plasmo-gap-12 plasmo-flex 

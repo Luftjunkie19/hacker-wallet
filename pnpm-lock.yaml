@@ -89,6 +89,9 @@ importers:
       web3:
         specifier: ^4.16.0
         version: 4.16.0(bufferutil@4.0.9)(typescript@5.3.3)(utf-8-validate@5.0.10)(zod@4.1.11)
+      webextension-polyfill:
+        specifier: ^0.12.0
+        version: 0.12.0
       zod:
         specifier: ^4.1.9
         version: 4.1.11
@@ -4807,6 +4810,9 @@ packages:
   web3@4.16.0:
     resolution: {integrity: sha512-SgoMSBo6EsJ5GFCGar2E/pR2lcR/xmUSuQ61iK6yDqzxmm42aPPxSqZfJz2z/UCR6pk03u77pU8TGV6lgMDdIQ==}
     engines: {node: '>=14.0.0', npm: '>=6.12.0'}
+
+  webextension-polyfill@0.12.0:
+    resolution: {integrity: sha512-97TBmpoWJEE+3nFBQ4VocyCdLKfw54rFaJ6EVQYLBCXqCIpLSZkwGgASpv4oPt9gdKCJ80RJlcmNzNn008Ag6Q==}
 
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
@@ -10381,6 +10387,8 @@ snapshots:
       - typescript
       - utf-8-validate
       - zod
+
+  webextension-polyfill@0.12.0: {}
 
   webidl-conversions@3.0.1: {}
 
