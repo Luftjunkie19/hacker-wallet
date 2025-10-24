@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 
 import {  useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { deleteKey, loadKey } from '~popup/IndexedDB/WalletDataStorage';
 import {useMessage, usePort} from '@plasmohq/messaging/hook';
 import { ethers } from 'ethers';
@@ -12,6 +12,7 @@ import SettingsDropDown from './dropdowns/SettingsDropDown';
 import HeaderModal from './modals/HeaderModal';
 import WalletModal from './WalletModal';
 import { sendToBackground } from '@plasmohq/messaging';
+import { getPort } from '@plasmohq/messaging/port';
 
 
 
@@ -48,23 +49,28 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
       setPassword(null);
       }
     }
+const conveyerPort= usePort('portHandler');
+const urlParams = new URLSearchParams(window.location.search);
+const requestId = urlParams.get('requestId');
 
- const {
-  send,
-  data,
-  listen
- }=usePort('portHandler');
+
+useEffect(()=>{
+
+  console.log('Log on every render');
+
+});
 
 
     return (<>
-{openExternalModalInteraction && existingRequestObj && <div className='plasmo-bg-accent/80 plasmo-absolute plasmo-flex plasmo-flex-col plasmo-gap-3
+{requestId && <div className='plasmo-bg-accent/80 plasmo-absolute plasmo-flex plasmo-flex-col plasmo-gap-3
 plasmo-top-0 plasmo-items-center plasmo-justify-between plasmo-left-0 plasmo-w-full plasmo-h-full plasmo-rounded-lg plasmo-p-2'>
-
 <>
 <div className="plasmo-flex plasmo-flex-col plasmo"></div>
+<p className=' plasmo-text-white'>{JSON.stringify(requestId)}</p>
 
-
-<button className='plasmo-text-secondary hover:plasmo-bg-secondary hover:plasmo-text-primary hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-primary plasmo-p-2 plasmo-rounded-lg plasmo-w-64'>Approve</button>
+<button onClick={()=>{
+  console.log(chrome);
+}} className='plasmo-text-secondary hover:plasmo-bg-secondary hover:plasmo-text-primary hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-primary plasmo-p-2 plasmo-rounded-lg plasmo-w-64'>Approve</button>
 </>
 
 </div>

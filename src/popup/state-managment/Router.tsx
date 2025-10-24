@@ -35,7 +35,6 @@ function Router({}: Props) {
  
 
   useEffect(()=>{
-
     loadElement();
   },[loadElement]);
 

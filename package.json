@@ -51,15 +51,24 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+    "background":{
+      "service_worker":"./src/background.ts",
+      "type":"module"
+    },
+    "externally_connectable": {
+  "matches": ["<all_urls>"]
+},
     "permissions": [
+      "runtime",
+      "unlimitedStorage",
+      "nativeMessaging",
       "contextMenus",
       "activeTab",
       "tabs",
       "storage",
       "scripting",
       "background",
-      "sessions",
-      "runtime"
+      "sessions"
     ],
     "host_permissions": [
       "<all_urls>"
