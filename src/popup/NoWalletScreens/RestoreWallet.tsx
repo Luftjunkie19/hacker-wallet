@@ -148,7 +148,6 @@ className='plasmo-h-24'
 />
 
 
-
 <button
 onClick={validateTheWallet}
 className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasmo-justify-center plasmo-border  plasmo-border-accent

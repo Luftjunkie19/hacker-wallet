@@ -2,9 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react'
 
 import {  useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { deleteKey, loadKey } from '~popup/IndexedDB/WalletDataStorage';
-import {useMessage, usePort} from '@plasmohq/messaging/hook';
+import { useNavigate } from 'react-router-dom';
+import { deleteKey, fetchContainingKeywordElements, loadKey } from '~popup/IndexedDB/WalletDataStorage';
 import { ethers } from 'ethers';
 import bcrypt  from 'bcryptjs';
 import NetworksDropDown from './dropdowns/NetworksDropDown';
@@ -12,7 +11,7 @@ import SettingsDropDown from './dropdowns/SettingsDropDown';
 import HeaderModal from './modals/HeaderModal';
 import WalletModal from './WalletModal';
 import { sendToBackground } from '@plasmohq/messaging';
-import { getPort } from '@plasmohq/messaging/port';
+
 
 
 
@@ -26,6 +25,7 @@ function Header() {
     const [password, setPassword]=useState<string>();
     const [accountDetails, setAccountDetails]=useState<{mnemonic:string, privateKey:string}>();
 const navigate=useNavigate();
+
     const logoutFromWallet= async ()=>{
 await deleteKey('session');
 await deleteKey('currentConnectedNetwork');
@@ -49,52 +49,129 @@ const isPasswordNotTheSame = await bcrypt.compare(password, encryptedPassword)
       setPassword(null);
       }
     }
-const conveyerPort= usePort('portHandler');
-const urlParams = new URLSearchParams(window.location.search);
-const requestId = urlParams.get('requestId');
 
+  
+
+const loadExternalRequests=useCallback(async()=>{
+
+  const sessionStorageRequest = await loadKey('external_request');
+
+if(sessionStorageRequest){
+setRequestingObj(sessionStorageRequest);
+}
+setOpenInternalModalInteraction(true);
+
+
+},[]);
 
 useEffect(()=>{
 
-  console.log('Log on every render');
+  loadExternalRequests();
 
-});
+},[loadExternalRequests]);
+
+
+
 
 
     return (<>
-{requestId && <div className='plasmo-bg-accent/80 plasmo-absolute plasmo-flex plasmo-flex-col plasmo-gap-3
-plasmo-top-0 plasmo-items-center plasmo-justify-between plasmo-left-0 plasmo-w-full plasmo-h-full plasmo-rounded-lg plasmo-p-2'>
+{existingRequestObj
+&& isLoggedIn &&
+<div className='plasmo-bg-accent/80  plasmo-z-50 plasmo-absolute plasmo-flex plasmo-flex-col plasmo-gap-3
+plasmo-top-0 plasmo-justify-between plasmo-left-0 plasmo-w-full plasmo-h-full plasmo-rounded-lg plasmo-p-2'>
 <>
-<div className="plasmo-flex plasmo-flex-col plasmo"></div>
-<p className=' plasmo-text-white'>{JSON.stringify(requestId)}</p>
+<p className='plasmo-text-secondary plasmo-p-2 plasmo-font-semibold plasmo-text-lg'>External Request</p>
+<div className="plasmo-flex plasmo-flex-col plasmo-self-start plasmo-w-full plasmo-gap-3">
+{existingRequestObj.method === 'eth_requestAccounts' && <>
 
-<button onClick={()=>{
-  console.log(chrome);
-}} className='plasmo-text-secondary hover:plasmo-bg-secondary hover:plasmo-text-primary hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-primary plasmo-p-2 plasmo-rounded-lg plasmo-w-64'>Approve</button>
+<div className="plasmo-bg-primary plasmo-flex plasmo-justify-between plasmo-items-center plasmo-w-full plasmo-p-4 plasmo-rounded-lg">
+<p className='plasmo-text-white'>Transaction Type</p>
+
+<p className='plasmo-text-secondary plasmo-font-semibold'>{existingRequestObj.method}</p>
+</div>
+
+<div className="plasmo-flex plasmo-flex-col plasmo-gap-2">
+
+<p className='plasmo-text-white'>Message:</p>
+<div className="plasmo-bg-primary plasmo-flex plasmo-flex-col plasmo-w-full plasmo-p-4 plasmo-rounded-lg">
+  <p className='plasmo-text-white plasmo-text-sm plasmo-font-normal'>Welcome To HackerWallet ! 
+
+    You got the external request from a Dapp. Because of security reasons, we want you to either approve or reject the 
+    permission to the dapp.
+
+    P.S. HACKERWALLET WILL NEVER ASK FOR YOUR MNEMONIC TO COMMIT A TRANSACTION !
+
+  </p>
+</div>
+
+</div>
+
+</>}
+
+</div>
+
+
+<div className="plasmo-flex plasmo-gap-3 plasmo-items-center plasmo-w-full">
+<button onClick={async ()=>{
+
+await sendToBackground({
+  name:'open-extension',
+  'body':{
+    type:'response',
+    response:{
+      addresses:null,
+      error:'You rejected the external request to connect the wallet.',
+    }
+  }
+})
+
+}} className='plasmo-text-white hover:plasmo-bg-red-800 hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-red-500 plasmo-p-2 plasmo-rounded-lg plasmo-w-44'>Reject</button>
+<button onClick={async()=>{
+
+const elementsFetched = await fetchContainingKeywordElements();
+const keystoredWallets = elementsFetched.filter((item)=>!item.loggedAt && item.address && item.encryptedWallet && item.password).map((item)=>item.address);
+
+if(keystoredWallets.length > 0){
+  sendToBackground({
+    name:'open-extension',
+    body:{
+      type:'response',
+      method:'eth_requestAccounts',
+      response:{
+        addresses:keystoredWallets,
+        error:null
+      }
+    }
+  })
+}else{
+  await sendToBackground({
+  name:'open-extension',
+  'body':{
+      method:'eth_requestAccounts',
+    type:'response',
+    response:{
+      error:'You have no key-wallets available.',
+      addresses:null,
+    }
+  }
+})
+}
+
+
+
+}} className='plasmo-text-secondary hover:plasmo-bg-secondary hover:plasmo-text-primary hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-primary plasmo-p-2 plasmo-rounded-lg plasmo-w-44'>Approve</button>
+</div>
 </>
 
 </div>
 }
+
+
+
 <div className="plasmo-gap-12 plasmo-flex 
    plasmo-justify-between plasmo-w-full
     plasmo-items-center">
-<div onClick={async ()=>{
-  
-console.log('hello from popup');
-const message = await sendToBackground({
-  'body':{
-    message:'Hello from popup.'
-  },'name':'conveyer', 
-  'sender':{'origin':"extension-popup"
-  }});
-
-  conveyerPort.send({
-    responseBack:'Hello from Popup'
-  });
-
-  console.log(message, 'message from popup');
-
-}}>
+<div>
 <img src={require('../icon.png')} width={56}height={56}className="plasmo-w-12 plasmo-cursor-pointer plasmo-h-12 plasmo-rounded-lg" alt="HackerWallet Logo" />    
       </div>
 

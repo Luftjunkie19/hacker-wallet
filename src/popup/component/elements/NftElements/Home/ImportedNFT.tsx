@@ -3,7 +3,7 @@ import { useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
 type Props = {element:any, index:number}
 
-function ImportedNFT({element, index}: Props) {
+function ImportedNFT({element}: Props) {
 
   const blockExplorerURL=useAppSelector((selector)=>selector.currentNetworkConnected.blockExplorerURL);
 

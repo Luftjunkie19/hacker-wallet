@@ -5,26 +5,17 @@ export const config:PlasmoCSConfig={
     world:"MAIN",
 };
 
-// const pending = new Map();
-// const listeners = new Map(); 
-
-// function emitEvent(event, payload){
-//   const s = listeners.get(event);
-//   if (s) for (const fn of s) try { 
-//     fn(payload);
-//   } catch(e){}
-// }
+console.log('Hello');
 
 (function(){
-    window.hackerWallet = {
+    (window as any).hackerWallet = {
     isHackerWallet: true,
     async request({ method, 
         payload
      }){
     try {
 
-  await chrome.runtime.sendMessage('cnlaimnmamfapmfkepefbemobinoaobf',
-    {
+  await chrome.runtime.sendMessage({
       payload,
       method,
       isHackerWallet:true

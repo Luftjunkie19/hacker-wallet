@@ -1,30 +1,36 @@
 import '~style.css';
 import { Link, useNavigate } from "react-router-dom"
 import { fetchContainingKeywordElements } from './IndexedDB/WalletDataStorage';
-import { useState, useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from './state-managment/ReduxWrapper';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import bcrypt from 'bcryptjs';
 import { setCurrentWallet } from './state-managment/slices/LoggedInWallet';
+import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 
 function UnloggedScreen() {
 
-  const [keystoredWallets, setKeystoredWallets]=useState<any[]>([]);
   const currentSessionAddress = useAppSelector((state)=>state.loggedIn.address);
   const dispatch =useAppDispatch();
   const navigation = useNavigate();
 
-  const loadKeystoredWallets= useCallback(async ()=>{
-    const wallets = await fetchContainingKeywordElements();
-    setKeystoredWallets(wallets.filter((item)=>!item.loggedAt && item.address && item.encryptedWallet && item.password));
-    console.log({wallets});
-  },[]);
+  const {data:keystoredWallets, error, isPending }=useQuery({
+    queryKey:['storedWallets'],
+    queryFn:async ()=>{
+      try {
+        console.log('Function called');
 
-  useEffect(()=>{
-    loadKeystoredWallets();
-  },[loadKeystoredWallets]);
+        const elementsFetched = await fetchContainingKeywordElements();
+        
+        return elementsFetched.filter((item)=>!item.loggedAt && item.address && item.encryptedWallet && item.password);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  });
+
 
   const zodSchema = z.object({
     password: z.string().min(12, {'message':'Password must be at least 12 characters long'})
@@ -76,6 +82,8 @@ alert('Wallet Unlocked Successfully');
 
   return (      
       <div className="plasmo-flex plasmo-self-end plasmo-justify-center plasmo-h-full plasmo-flex-col plasmo-w-full plasmo-gap-3 plasmo-items-center">
+
+{!error && <>
 {!currentSessionAddress && keystoredWallets && keystoredWallets.length > 0 ?
 <form onSubmit={handleSubmit(handleAuth, (err)=>{
   console.log('Form submission errors:', err);
@@ -118,8 +126,19 @@ alert('Wallet Unlocked Successfully');
         </Link>
 </>
 }
+</>}
+
+
+{error && <div className='plasmo-flex plasmo-flex-col plasmo-justify-center plasmo-items-center plasmo-gap-2'>
+  <p className='plasmo-text-red-500 plasmo-text-xl plasmo-font-bold'>Error Occured</p>
+  
+  <p className='plasmo-text-white'>Error name: <span className='plasmo-text-red-500 plasmo-font-semibold'>{error.name}</span></p>
+<p className='plasmo-text-sm plasmo-font-light plasmo-text-red-500'>{error.message}</p>
+
+  </div>}
+
+
       </div>
-   
   )
 }
 

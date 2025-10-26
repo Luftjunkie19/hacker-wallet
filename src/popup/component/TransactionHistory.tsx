@@ -55,7 +55,8 @@ try {
 
           </div>
 
-          <p className='plasmo-text-red-500 plasmo-font-bold plasmo-text-sm'>-{(Number(tx.value) / 10 ** 18).toFixed(4)} ETH</p>
+          <p className={`${publicAddress && tx &&
+tx.to!== publicAddress ? 'plasmo-text-red-500' : 'plasmo-text-green-500'} plasmo-font-bold plasmo-text-sm`}>{(Number(tx.value) / 10 ** 18).toFixed(4)} ETH</p>
         </div>))}
         </>}
     </div>

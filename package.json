@@ -15,6 +15,7 @@
     "@plasmohq/messaging": "^0.7.2",
     "@radix-ui/themes": "^3.2.1",
     "@reduxjs/toolkit": "^2.8.2",
+    "@tanstack/react-query": "^5.90.5",
     "@types/bcrypt": "^6.0.0",
     "alchemy-sdk": "^3.6.3",
     "bcryptjs": "^3.0.2",
@@ -25,8 +26,8 @@
     "idb": "^8.0.3",
     "plasmo": "0.90.5",
     "radix-ui": "^1.4.3",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "react-hook-form": "^7.62.0",
     "react-icons": "^5.5.0",
     "react-qrcode-logo": "^4.0.0",
@@ -41,37 +42,80 @@
     "zod": "^4.1.9"
   },
   "devDependencies": {
+    "@eslint/js": "^9.38.0",
     "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@tanstack/eslint-plugin-query": "^5.91.2",
     "@types/chrome": "0.0.258",
     "@types/node": "20.11.5",
     "@types/react": "18.2.48",
     "@types/react-dom": "18.2.18",
+    "eslint": "^9.38.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.4.0",
+    "jiti": "^2.6.1",
     "postcss": "8.4.33",
     "prettier": "3.2.4",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "typescript-eslint": "^8.46.2"
   },
   "manifest": {
-    "background":{
-      "service_worker":"./src/background.ts",
-      "type":"module"
+  "icons": {
+    "16": "./gen-assets/icon16.plasmo.png",
+    "32": "./gen-assets/icon32.plasmo.png",
+    "48": "./gen-assets/icon48.plasmo.png",
+    "64": "./gen-assets/icon64.plasmo.png",
+    "128": "./gen-assets/icon128.plasmo.png"
+  },
+  "manifest_version": 3,
+  "action": {
+    "default_icon": {
+      "16": "./gen-assets/icon16.plasmo.png",
+      "32": "./gen-assets/icon32.plasmo.png",
+      "48": "./gen-assets/icon48.plasmo.png",
+      "64": "./gen-assets/icon64.plasmo.png",
+      "128": "./gen-assets/icon128.plasmo.png"
     },
-    "externally_connectable": {
-  "matches": ["<all_urls>"]
-},
-    "permissions": [
-      "runtime",
-      "unlimitedStorage",
-      "nativeMessaging",
-      "contextMenus",
-      "activeTab",
-      "tabs",
-      "storage",
-      "scripting",
-      "background",
-      "sessions"
-    ],
-    "host_permissions": [
-      "<all_urls>"
-    ]
-  }
+    "default_popup": "./popup.html"
+  },
+  "version": "0.0.1",
+  "author": "Luftjukie",
+  "name": "DEV | Hacker wallet",
+  "description": "It's a Ethereum Wallet made as a project.",
+  "permissions": [
+    "scripting",
+    "unlimitedStorage",
+    "nativeMessaging",
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "storage",
+    "background",
+    "sessions"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "/src/contents/openPopupRelayer.ts"
+      ]
+    },
+        {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "/src/contents/index.ts"
+      ]
+    }
+  ],
+"background": {
+    "service_worker": "background/index.ts"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}
+
 }

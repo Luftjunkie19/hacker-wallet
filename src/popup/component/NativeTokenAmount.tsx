@@ -1,4 +1,3 @@
-
 import React from 'react'
 import useFetchNativeAmount from '~popup/hooks/useFetchNativeAmount';
 import { useAppSelector } from '~popup/state-managment/ReduxWrapper';
@@ -6,17 +5,13 @@ import { useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
 
 function NativeTokenAmount() {
-        const publicAddress=useAppSelector((state)=>state.loggedIn.address);
-        const currentNetworkNativeTokenSymbol=useAppSelector((state)=> state.currentNetworkConnected.currencySymbol);
-        const {amount}=useFetchNativeAmount();
+  const publicAddress=useAppSelector((state)=>state.loggedIn.address);
+  const currentNetworkNativeTokenSymbol=useAppSelector((state)=> state.currentNetworkConnected.currencySymbol);
+  const {amount}=useFetchNativeAmount();
   
-    
-
-
-
+  
   return (
     <div className='plasmo-flex plasmo-gap-2 plasmo-items-center plasmo-text-white'>
-
 {
 publicAddress
 && !isNaN(Number(amount))

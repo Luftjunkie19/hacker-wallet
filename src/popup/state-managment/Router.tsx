@@ -10,17 +10,19 @@ import { setCurrentWallet } from './slices/LoggedInWallet';
 import TransferScreen from '~popup/LogggedInScreens/TransferScreen';
 import Header from '~popup/component/Header';
 import { setCurrentNetwork } from './slices/CurrentWalletNetwork';
+import { usePort } from '@plasmohq/messaging/hook';
 type Props = {}
 
 function Router({}: Props) {
   const selector = useAppSelector((state)=>state.loggedIn.encryptedWallet);
   const dispatch =useAppDispatch();
+  const portListener = usePort('requestPermission' as never);
+  
 
   const loadElement=useCallback(async ()=>{
     const loadedDb= await loadKey(`session`);
 
     const loadedCurrentNetwork = await loadKey('currentConnectedNetwork');
-
 
     if(typeof loadedDb !== 'undefined') dispatch(setCurrentWallet({'address':loadedDb.account, 'encryptedWallet':loadedDb.encryptedWallet,
       password: loadedDb.password,
@@ -31,18 +33,12 @@ function Router({}: Props) {
     
   },[selector]);
 
-
- 
-
   useEffect(()=>{
     loadElement();
   },[loadElement]);
 
 
-
-
-
-  return (
+return (
 <>
 
 <MemoryRouter>

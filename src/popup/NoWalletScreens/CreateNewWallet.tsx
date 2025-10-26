@@ -10,6 +10,7 @@ import { FaEye } from 'react-icons/fa';
 import { IoMdEyeOff } from "react-icons/io";
 import bcrypt from 'bcryptjs'
 import { saveKey } from '../IndexedDB/WalletDataStorage';
+import { useQuery } from '@tanstack/react-query';
 
 type Props = {}
 
@@ -17,7 +18,6 @@ function CreateNewWallet({}: Props) {
   const [confirmInput, setConfirmInput] = useState<boolean>(false);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [indicies, setIndices] = useState<Set<number>>(new Set());
-  const [mnemonic, setMnemonic] = useState<string>();
   const [open, setOpen] = useState(false);
   const [inputPhrase, setInputPhrase] = useState<string>('');
   const [confirmedSeed, setConfirmedSeed]=useState<boolean>();
@@ -29,15 +29,15 @@ function CreateNewWallet({}: Props) {
 
   const dispatch = useAppDispatch();
 
-useEffect(() => {
-    if(!mnemonic){
-       const getMnemonic = () => {
-           const mnemonic =  generateMnemonic();
-           setMnemonic(mnemonic);
-       };
-       getMnemonic();
+const {data:mnemonic}=useQuery(
+  {
+ queryKey:['mnemonic'],
+    queryFn: ()=>{
+      const mnemonic =  generateMnemonic();
+      return mnemonic;
     }
-},[mnemonic]);
+  }
+)
 
 const handleConfirm = () => {
   if (mnemonic) {
