@@ -3,9 +3,9 @@ import type { PlasmoCSConfig } from "plasmo"
 import { relayMessage } from "@plasmohq/messaging"
  
 export const config: PlasmoCSConfig = {
-  matches: ["<all_urls>"],
+  matches: ["http://www.plasmo.com/*"] // Only relay messages from this domain
 }
  
 relayMessage({
-  name: "open-extension" as never
-});
+  name: "openExtension" as never
+})

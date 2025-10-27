@@ -93,20 +93,20 @@
     "sessions"
   ],
   "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "/src/contents/openPopupRelayer.ts"
-      ]
-    },
         {
       "matches": [
         "<all_urls>"
       ],
       "js": [
-        "/src/contents/index.ts"
+        "/src/contents/content.ts"
+      ]
+    },
+     {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "/src/contents/openExtension.ts"
       ]
     }
   ],

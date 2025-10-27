@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import {  useAppSelector } from '~popup/state-managment/ReduxWrapper';
 
 import { useNavigate } from 'react-router-dom';
-import { deleteKey, fetchContainingKeywordElements, loadKey } from '~popup/IndexedDB/WalletDataStorage';
+import { deleteKey, fetchContainingKeywordElements, loadKey, saveKey} from '~popup/IndexedDB/WalletDataStorage';
 import { ethers } from 'ethers';
 import bcrypt  from 'bcryptjs';
 import NetworksDropDown from './dropdowns/NetworksDropDown';
@@ -11,6 +11,7 @@ import SettingsDropDown from './dropdowns/SettingsDropDown';
 import HeaderModal from './modals/HeaderModal';
 import WalletModal from './WalletModal';
 import { sendToBackground } from '@plasmohq/messaging';
+import { set } from 'zod';
 
 
 
@@ -19,9 +20,10 @@ function Header() {
     const isLoggedIn= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
     const encryptedPrivateKey= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
     const encryptedPassword= useAppSelector((selector)=>selector.loggedIn.encryptedWallet);
+    const currentNetwork = useAppSelector((selector)=>selector.currentNetworkConnected.chainId);
     const [openState, setOpenState]=useState<boolean>(false);
     const [existingRequestObj, setRequestingObj]=useState<any>();
-    const [openExternalModalInteraction, setOpenInternalModalInteraction]=useState<boolean>(false);
+    const [clickedButton, setClickedButton]=useState<'approve' | 'reject'>();
     const [password, setPassword]=useState<string>();
     const [accountDetails, setAccountDetails]=useState<{mnemonic:string, privateKey:string}>();
 const navigate=useNavigate();
@@ -59,7 +61,6 @@ const loadExternalRequests=useCallback(async()=>{
 if(sessionStorageRequest){
 setRequestingObj(sessionStorageRequest);
 }
-setOpenInternalModalInteraction(true);
 
 
 },[]);
@@ -113,39 +114,84 @@ plasmo-top-0 plasmo-justify-between plasmo-left-0 plasmo-w-full plasmo-h-full pl
 
 <div className="plasmo-flex plasmo-gap-3 plasmo-items-center plasmo-w-full">
 <button onClick={async ()=>{
+setClickedButton('reject');
+await saveKey('request_reponse', {
+    type:'response',
+    method:'eth_requestAccounts',
+    response:{
+      addresses:null,
+      chainId:null,
+      error: 'You rejected the external request to connect the wallet.',
+    }
+  });
 
-await sendToBackground({
-  name:'open-extension',
+const res = await sendToBackground({
+  name:'openExtension' as never,
   'body':{
     type:'response',
     response:{
       addresses:null,
+      chainId:null,
       error:'You rejected the external request to connect the wallet.',
     }
   }
-})
+});
 
-}} className='plasmo-text-white hover:plasmo-bg-red-800 hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-red-500 plasmo-p-2 plasmo-rounded-lg plasmo-w-44'>Reject</button>
+if(res){
+  setClickedButton(undefined);
+}
+
+console.log(res, 'Response from background to popup');
+
+}} className='plasmo-text-white hover:plasmo-bg-red-800 hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-red-500 plasmo-p-2 plasmo-rounded-lg plasmo-w-44'>
+  {clickedButton === 'reject' ? 'Rejecting...' : 'Reject'}
+  </button>
+
 <button onClick={async()=>{
-
+setClickedButton('approve');
 const elementsFetched = await fetchContainingKeywordElements();
 const keystoredWallets = elementsFetched.filter((item)=>!item.loggedAt && item.address && item.encryptedWallet && item.password).map((item)=>item.address);
 
 if(keystoredWallets.length > 0){
-  sendToBackground({
-    name:'open-extension',
+
+await saveKey('request_reponse', {
+    type:'response',
+    method:'eth_requestAccounts',
+    response:{
+      addresses:keystoredWallets,
+      chainId:currentNetwork,
+      error:null
+    }
+  });
+
+const res =  await sendToBackground({
+    name:'openExtension' as never,
     body:{
       type:'response',
       method:'eth_requestAccounts',
       response:{
         addresses:keystoredWallets,
+        chainId:currentNetwork,
         error:null
       }
     }
-  })
+  });
+  console.log(res, 'Response from background');
+
+  
+
 }else{
-  await sendToBackground({
-  name:'open-extension',
+   await saveKey('request_reponse', {
+    type:'response',
+    method:'eth_requestAccounts',
+    response:{
+      addresses:null,
+      error: 'You have no key-wallets available.',
+    }
+  });
+
+const res =  await sendToBackground({
+  name: 'openExtension' as never,
   'body':{
       method:'eth_requestAccounts',
     type:'response',
@@ -154,12 +200,18 @@ if(keystoredWallets.length > 0){
       addresses:null,
     }
   }
-})
+});
+
+if(res){
+  setClickedButton(undefined);
 }
 
-
-
-}} className='plasmo-text-secondary hover:plasmo-bg-secondary hover:plasmo-text-primary hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-primary plasmo-p-2 plasmo-rounded-lg plasmo-w-44'>Approve</button>
+console.log(res, 'Response from background');
+}
+}} className='plasmo-text-secondary hover:plasmo-bg-secondary hover:plasmo-text-primary hover:plasmo-scale-95 plasmo-transition-all plasmo-duration-500 plasmo-bg-primary plasmo-p-2 plasmo-rounded-lg plasmo-w-44'>
+{clickedButton === 'approve' ? 'Approving...' : 'Approve'}
+  
+  </button>
 </div>
 </>
 

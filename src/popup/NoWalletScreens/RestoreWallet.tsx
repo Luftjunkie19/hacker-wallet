@@ -20,7 +20,7 @@ recoveryPhrase: z.string({'error':'Invalid Type'}).refine((string)=>string.trim(
   });
 const navigate = useNavigate();
 
-  const {trigger, formState, register, reset, watch, handleSubmit}=useForm<z.infer<typeof restoreWalletSchema>>({
+  const {trigger, formState, register, watch, handleSubmit, setError}=useForm<z.infer<typeof restoreWalletSchema>>({
     resolver:zodResolver(restoreWalletSchema)
   });
 
@@ -74,15 +74,17 @@ try {
   if(
     formState.errors.password &&
     formState.errors.password.message && formState.errors.password.message.length !== 0){
-  return;
+alert(`Error: ${formState.errors.password.message}`);
+setError('password', {type:'manual', message: formState.errors.password.message.toString()});
+
 }
 
 
   const wallet = ethers.Wallet.fromPhrase(watch('recoveryPhrase')); 
 
   if(!wallet){
-    alert('No such wallet exists');
-    return;
+    throw new Error('Wallet Restoring failed');
+
   }
 
 
@@ -173,10 +175,12 @@ className='plasmo-text-base plasmo-font-semibold plasmo-text-secondary'
 placeholder='Recovery phrase...'
 className='plasmo-bg-accent plasmo-border plasmo-border-secondary plasmo-rounded-lg plasmo-p-2 plasmo-text-white'
 />
+{formState.errors.password && <p className='plasmo-text-red-500 plasmo-text-sm plasmo-font-semibold'>
+  {formState.errors.password.message}
+  </p>}
 
 <button
 type='submit'
-onClick={restoreWallet}
 className="plasmo-bg-secondary flex plasmo-items-center plasmo-text-center plasmo-justify-center plasmo-border  plasmo-border-accent
         plasmo-font-semibold plasmo-text-sm plasmo-rounded-lg plasmo-px-4 plasmo-py-2 plasmo-text-primary
          hover:plasmo-border-secondary hover:plasmo-text-white

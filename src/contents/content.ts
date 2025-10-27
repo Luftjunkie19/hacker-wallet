@@ -1,3 +1,4 @@
+import { relayMessage } from '@plasmohq/messaging';
 import type {PlasmoCSConfig} from 'plasmo';
 
 export const config:PlasmoCSConfig={
@@ -5,7 +6,6 @@ export const config:PlasmoCSConfig={
     world:"MAIN",
 };
 
-console.log('Hello');
 
 (function(){
     (window as any).hackerWallet = {
@@ -15,11 +15,7 @@ console.log('Hello');
      }){
     try {
 
-  await chrome.runtime.sendMessage({
-      payload,
-      method,
-      isHackerWallet:true
-    });
+      console.log(method, payload);
   
 
     } catch (error) {
@@ -34,5 +30,6 @@ console.log('Hello');
     }
   };
 })();
+
 
 
