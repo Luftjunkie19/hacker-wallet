@@ -23,6 +23,18 @@ If you want to checkout how HackerWallet works, you can download it onto your ma
 
 Now as you have the project fully loaded, you can either have a production version or development version to upload onto your browser.
 
+If you want to fully use HackerWallet you need to create an `.env` file and implement following things there:
+
+- Alchemy API-Key
+- Etherscan API-Key
+
+```bash
+PLASMO_PUBLIC_ALCHEMY_API_KEY=
+PLASMO_PUBLIC_ETHERSCAN_API_KEY=
+PLASMO_PUBLIC_ETHERSCAN_API_URL= https://api.etherscan.io/api
+
+```
+
 ```bash
 pnpm run dev // Builds the development version
 ```
