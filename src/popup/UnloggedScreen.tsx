@@ -16,7 +16,7 @@ function UnloggedScreen() {
   const dispatch =useAppDispatch();
   const navigation = useNavigate();
 
-  const {data:keystoredWallets, error, isPending }=useQuery({
+  const {data:keystoredWallets, error }=useQuery({
     queryKey:['storedWallets'],
     queryFn:async ()=>{
       try {

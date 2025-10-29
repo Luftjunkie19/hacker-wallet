@@ -47,13 +47,12 @@ const [gasFeeOptions, setGasFeeOptions]=useState<any>(null);
   
   
   return (
-<FormProvider {...(tokenType === 'ERC20' ? erc20Methods : nftMethods)}> 
-
-    <>
+<>
+{tokenType === 'ERC20' ?  
+<FormProvider {...erc20Methods}>
 
 {
   currentStep === 0 &&
-  <>
   <TransferTokenForm
   tokenType={tokenType}
   setTokenType={setTokenType}
@@ -64,9 +63,7 @@ const [gasFeeOptions, setGasFeeOptions]=useState<any>(null);
    maxAmountToSend={maxAmountToSend}
    setGasFeesOptions={setGasFeeOptions}
    />
-  </>
 }
-
 
 
 {
@@ -74,10 +71,32 @@ currentStep === 1 && <TransactionSummary gasFeesOptions={gasFeeOptions} password
 }
 
       
-    </>
+
+  </FormProvider> : <FormProvider {...nftMethods}> 
+
+
+
+{
+  currentStep === 0 &&
+
+  <TransferTokenForm
+  tokenType={tokenType}
+  setTokenType={setTokenType}
+  password={password}
+  setPassword={setPassword}
+   setCurrentStep={setCurrentStep} 
+   setMaxAmountToSend={setMaxAmountToSend} 
+   maxAmountToSend={maxAmountToSend}
+   setGasFeesOptions={setGasFeeOptions}
+   />
+}
+
+{
+currentStep === 1 && <TransactionSummary gasFeesOptions={gasFeeOptions} password={password} maxAmountToSend={maxAmountToSend}/>
+}
   </FormProvider>
-
-
+}
+</>
   )
 }
 

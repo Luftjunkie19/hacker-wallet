@@ -13,6 +13,7 @@ import * as z from 'zod';
 import { erc20Abi } from '~popup/abis/ERC20'
 import { AiOutlineLoading3Quarters } from 'react-icons/ai'
 import { deleteKey, fetchContainingKeywordElements } from '~popup/IndexedDB/WalletDataStorage'
+import useEthersComponents from '~popup/hooks/useEthersComponents'
 type Props = {
     password:string
     maxAmountToSend:number,
@@ -24,12 +25,11 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
     const [selectedGasOption, setGasOption]=useState<any>();
     const [isLoading, setIsLoading]=useState<boolean>(false);
     const [isSuccess , setIsSuccess]=useState<boolean>(false);
-    const encryptedPrivatKey= useAppSelector((state)=>state.loggedIn.encryptedWallet);
     const publicAddress= useAppSelector((state)=>state.loggedIn.address);
-    const rpcURL=useAppSelector((state)=>state.currentNetworkConnected.rpcURL);
     const currentNetworkChainID = useAppSelector((state)=>state.currentNetworkConnected.chainId);
-    const passwordOfSession = useAppSelector((state)=>state.loggedIn.password);
     const navigate =useNavigate();
+
+    const { getWallet, checkValidity}=useEthersComponents();
 
     const zodERC20TxSchema= z.object({
         erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).optional(),
@@ -52,18 +52,9 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
         try{
                   setIsSuccess(false);
 
-        const isValid= await bcrypt.compare(password, passwordOfSession);
+       await checkValidity(password);
     
-        if(!passwordOfSession || !isValid){
-    alert('Wrong password to validate the transaction !');
-    return;
-        }
-    
-        const provider = new ethers.JsonRpcProvider(rpcURL);
-    
-        const wallet = await ethers.Wallet.fromEncryptedJson(encryptedPrivatKey, password);
-    
-        const walletDecrypted = new ethers.Wallet(wallet.privateKey, provider);
+        const walletDecrypted = await getWallet(password);
       
         const nftInterface= new ethers.Interface(erc721Abi);
     
@@ -77,9 +68,9 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
         
         if(!approvalResult){
           alert('Something went wrong with approval of NFT');
-          return;
+          throw new Error('Approval failed');
         }
-
+    console.log(selectedGasOption, 'Selected Gas Option');
 
     const data = nftContract.interface.encodeFunctionData("safeTransferFrom", [publicAddress, nftWatch('receiverAddress'), BigInt(nftWatch('tokenId'))]);
     const populatedTransaction:ethers.TransactionRequest = { to: contractAddr,from: publicAddress, data };
@@ -90,9 +81,9 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
           from: populatedTransaction.from,
           value: populatedTransaction.value,
           chainId: currentNetworkChainID,
-          gasLimit: selectedGasOption.gasLimit,
-          maxFeePerGas:selectedGasOption.maxFeePerGas,
-          maxPriorityFeePerGas: selectedGasOption.maxPriorityFeePerGas,
+          gasLimit: BigInt(selectedGasOption.gasLimit),
+          maxFeePerGas: BigInt(selectedGasOption.maxFeePerGas),
+          maxPriorityFeePerGas: BigInt(selectedGasOption.maxPriorityFeePerGas),
         });
     
         const result = await tx.wait();
@@ -103,7 +94,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
                        const foundElement = loadedElements.find((item)=>item.nftAddress === contractAddr);
                
                        if(foundElement){
-                         await deleteKey(`erc721-${contractAddr}`)
+                         await deleteKey(`erc721-${contractAddr}`);
                        }
           setIsSuccess(true);
              reset();
@@ -121,18 +112,9 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
         try {
                        setIsSuccess(false);
 
-          const isValid= await bcrypt.compare(password, passwordOfSession);
-          
-          if(!passwordOfSession || !isValid){
-            alert('Wrong password to validate the transaction !');
-            return;
-          }
-    
-          const provider = new ethers.JsonRpcProvider(rpcURL);
-          
-          const wallet = await ethers.Wallet.fromEncryptedJson(encryptedPrivatKey, password);
-          
-          const walletDecrypted = new ethers.Wallet(wallet.privateKey, provider);
+         await checkValidity(password);
+
+         const walletDecrypted = await getWallet(password);
           
           const erc20Interface= new ethers.Interface(erc20Abi);
     
@@ -143,6 +125,8 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
         const erc20Contract= new ethers.Contract(watch('erc20TokenAddress'), erc20Interface, walletDecrypted);
     
         const contractAddr= await erc20Contract.getAddress();
+
+        console.log(decimals, 'Decimals');
     
         const amountToBeSent= BigInt(watch('tokenAmountToBeSent') * (10 ** Number(decimals)));
     
@@ -151,18 +135,20 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
     
     console.log({populatedTransaction, data});
 
+    console.log(selectedGasOption, 'Selected Gas Option ERC20');
+
+    console.log(gasFeesOptions, 'Gas Fees Options ERC20');
+
         const tx = await walletDecrypted.sendTransaction({
-          data: populatedTransaction.data,
+          data: data,
           to: populatedTransaction.to,
           from: populatedTransaction.from,
-          value: populatedTransaction.value,
+          value: 0n,
           chainId: currentNetworkChainID,
-          gasLimit: selectedGasOption.gasLimit ?? gasFeesOptions.medium.gasLimit,
-          maxFeePerGas:selectedGasOption.maxFeePerGas  ?? gasFeesOptions.medium.maxFeePerGas,
-          maxPriorityFeePerGas: selectedGasOption.maxPriorityFeePerGas  ?? gasFeesOptions.medium.maxPriorityFeePerGas,
+          gasLimit: selectedGasOption.gasLimit ? selectedGasOption.gasLimit : gasFeesOptions.medium.gasLimit,
+          maxFeePerGas:selectedGasOption.maxFeePerGas  ? selectedGasOption.maxFeePerGas : gasFeesOptions.medium.maxFeePerGas,
+          maxPriorityFeePerGas: selectedGasOption.maxPriorityFeePerGas ? selectedGasOption.maxPriorityFeePerGas : gasFeesOptions.medium.maxPriorityFeePerGas
         });
-    
-    
     
          const result = await tx.wait();
     
@@ -170,8 +156,11 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
           setIsSuccess(true);
           resetERC20();
          }
+
+         console.log(result);
           
         } catch (error) {
+            alert(`Transaction Failed !: ${error}`);
           console.log(error);
           setIsSuccess(false);
         }
@@ -187,28 +176,18 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
     
         try {
                        setIsSuccess(false);
-           const provider = new ethers.JsonRpcProvider(rpcURL);
-    
-        const isValid= await bcrypt.compare(password, passwordOfSession);
-    
-        if(!passwordOfSession || !isValid){
-    alert('Wrong password to validate the transaction !');
-    
-        }
-    
-        const wallet = await ethers.Wallet.fromEncryptedJson(encryptedPrivatKey, password);
-    
-        const walletDecrypted = new ethers.Wallet(wallet.privateKey, provider);
-    
+        await checkValidity(password);
+
+        const walletDecrypted = await getWallet(password);
     
         const tx= await walletDecrypted.sendTransaction({
       from:publicAddress,
       to: watch('receiverAddress'),
       value: BigInt(watch('tokenAmountToBeSent') * (10**18)),
       'chainId': currentNetworkChainID,
-      gasLimit: selectedGasOption.gasLimit ?? gasFeesOptions.medium.gasLimit,
-          maxFeePerGas:selectedGasOption.maxFeePerGas  ?? gasFeesOptions.medium.maxFeePerGas,
-          maxPriorityFeePerGas: selectedGasOption.maxPriorityFeePerGas  ?? gasFeesOptions.medium.maxPriorityFeePerGas
+      gasLimit: selectedGasOption.gasLimit ? BigInt(selectedGasOption.gasLimit) : gasFeesOptions.medium.gasLimit,
+          maxFeePerGas:selectedGasOption.maxFeePerGas  ? BigInt(selectedGasOption.maxFeePerGas) : gasFeesOptions.medium.maxFeePerGas,
+          maxPriorityFeePerGas:  selectedGasOption.maxPriorityFeePerGas ? BigInt(selectedGasOption.maxPriorityFeePerGas) : gasFeesOptions.medium.maxPriorityFeePerGas
         });
     
         const receiptTx= await tx.wait();
@@ -220,7 +199,7 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
           reset();
 
         } catch (error) {
-    
+    alert(`Transaction Failed !: ${error}`);
           console.log(error);
           setIsSuccess(false);
         }
@@ -265,9 +244,6 @@ function TransactionSummary({password, maxAmountToSend, gasFeesOptions}: Props) 
       }
     
       
-    
-
-
 
   return (<>
   {isLoading && !isSuccess &&
@@ -353,21 +329,21 @@ key={index}
 onClick={(e)=>{
   e.preventDefault();
   setGasOption(element);
-}} className={`${selectedGasOption && Number((element as any).expectedFeeEth) === Number(selectedGasOption.expectedFeeEth) ? 'plasmo-bg-secondary/70 plasmo-border-accent plasmo-border-2' : 'plasmo-bg-accent'} plasmo-p-3 plasmo-rounded-lg plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-items-center plasmo-justify-center`}>
+}} className={`${selectedGasOption && Number((element as any).maxFeePerGas) === Number(selectedGasOption.maxFeePerGas) ? 'plasmo-bg-secondary/70 plasmo-border-accent plasmo-border-2' : 'plasmo-bg-accent'} plasmo-p-3 plasmo-rounded-lg plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-items-center plasmo-justify-center`}>
 <p className='plasmo-text-sm plasmo-text-white'>{
   index === 0 ? 'Slow' : index === 1 ? 'Medium' : 'Fast'
   }</p>
 
 { index === 0 &&
-<GiSloth className={`${selectedGasOption && Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+<GiSloth className={`${selectedGasOption && Number((element as any).maxFeePerGas) === Number(selectedGasOption.maxFeePerGas) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
 }
 
 {index === 1 && 
-<LuBatteryMedium className={`${selectedGasOption &&  Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+<LuBatteryMedium className={`${selectedGasOption &&  Number((element as any).maxFeePerGas) === Number(selectedGasOption.maxFeePerGas) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
 }
 
 {index === 2 && 
-<MdFastfood className={`${selectedGasOption &&  Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+<MdFastfood className={`${selectedGasOption &&  Number((element as any).maxFeePerGas) === Number(selectedGasOption.maxFeePerGas) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
 }
 
 </button>
@@ -394,6 +370,7 @@ className='plasmo-bg-secondary plasmo-rounded-lg plasmo-p-2 plasmo-border plasmo
     plasmo-flex plasmo-flex-col plasmo-gap-4
     plasmo-h-screen plasmo-overflow-auto' onSubmit={handleSubmit(handleFinalTransaction, (err)=>{
       console.log(err);
+      alert(err.erc20TokenAddress ? err.erc20TokenAddress.message : err.tokenAmountToBeSent ? err.tokenAmountToBeSent.message : 'Error in form submission' );
     })}>
     <p
 className='plasmo-text-secondary plasmo-font-semibold plasmo-text-lg
@@ -426,7 +403,7 @@ className='plasmo-text-secondary plasmo-font-semibold plasmo-text-lg
 <div className="plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-w-full">
 <p className='plasmo-text-white'>Speed Of Tranasaction</p>
 {gasFeesOptions &&
-<div className="plasmo-w-full plasmo-grid plasmo-grid-cols-3 plasmo-items-center plasmo-gap-2">
+<div onClick={()=>console.log(gasFeesOptions)} className="plasmo-w-full plasmo-grid plasmo-grid-cols-3 plasmo-items-center plasmo-gap-2">
 
 {Object.values(gasFeesOptions).map((element, index)=>(
 <button 
@@ -434,21 +411,22 @@ key={index}
 onClick={(e)=>{
   e.preventDefault();
   setGasOption(element);
-}} className={`${selectedGasOption && Number((element as any).expectedFeeEth) === Number(selectedGasOption.expectedFeeEth) ? 'plasmo-bg-secondary/70 plasmo-border-accent plasmo-border-2' : 'plasmo-bg-accent'} plasmo-p-3 plasmo-rounded-lg plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-items-center plasmo-justify-center`}>
+  console.log(selectedGasOption);
+}} className={`${selectedGasOption && Number((element as any).maxFeePerGas) === Number(selectedGasOption.maxFeePerGas) ? 'plasmo-bg-secondary/70 plasmo-border-accent plasmo-border-2' : 'plasmo-bg-accent'} plasmo-p-3 plasmo-rounded-lg plasmo-flex plasmo-flex-col plasmo-gap-2 plasmo-items-center plasmo-justify-center`}>
 <p className='plasmo-text-sm plasmo-text-white'>{
   index === 0 ? 'Slow' : index === 1 ? 'Medium' : 'Fast'
   }</p>
 
 { index === 0 &&
-<GiSloth className={`${selectedGasOption && Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+<GiSloth className={`${selectedGasOption && Number((element as any).maxFeePerGas) === Number(selectedGasOption.maxFeePerGas) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
 }
 
 {index === 1 && 
-<LuBatteryMedium className={`${selectedGasOption &&  Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+<LuBatteryMedium className={`${selectedGasOption &&  Number((element as any).maxFeePerGas) === Number(selectedGasOption.maxFeePerGas) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
 }
 
 {index === 2 && 
-<MdFastfood className={`${selectedGasOption &&  Number((element as any).expectedFeeWei) === Number(selectedGasOption.expectedFeeWei) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
+<MdFastfood className={`${selectedGasOption &&  Number((element as any).maxFeePerGas) === Number(selectedGasOption.maxFeePerGas) ? 'plasmo-text-accent' : 'plasmo-text-secondary'}`}/>
 }
 
 </button>

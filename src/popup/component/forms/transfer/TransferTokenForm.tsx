@@ -13,7 +13,8 @@ import { erc721Abi } from '~popup/abis/ERC721';
 import { erc20Abi } from '~popup/abis/ERC20';
 import { SiOpensea } from 'react-icons/si';
 import { Link } from 'react-router-dom';
-import bcrypt from 'bcryptjs';
+import useEthersComponents from '~popup/hooks/useEthersComponents';
+import { useQuery } from '@tanstack/react-query';
 
 type Props = {
   maxAmountToSend:number, 
@@ -30,26 +31,25 @@ type Props = {
 
 function TransferTokenForm({maxAmountToSend, tokenType, setTokenType, setMaxAmountToSend, setCurrentStep, setPassword, password, setGasFeesOptions}: Props) {
     // Imported NFTs
-    const [importedNfts, setImportedNfts]=useState<any[]>([]);  
+  
     const publicAddress = useAppSelector((state)=>state.loggedIn.address);
     const currentNetworkNativeTokenSymbol= useAppSelector((state)=>state.currentNetworkConnected.currencySymbol);
     const [isLoading, setIsLoading]=useState<boolean>(false);
     const [openModal, setOpenModal]=useState<boolean>(false);
     const {tokens}=useFetchTokensData();
     const {elements:nftElements}=useFetchNftData();
-    const encryptedPrivatKey= useAppSelector((state)=>state.loggedIn.encryptedWallet);
-    const rpcURL=useAppSelector((state)=>state.currentNetworkConnected.rpcURL);
-    const passwordOfSession = useAppSelector((state)=>state.loggedIn.password);
     
-    const fetchERC721s= useCallback(async ()=>{
-        const elements= await fetchContainingKeywordElements();
-        
-        setImportedNfts((elements as unknown as any[]).filter((element)=> typeof element.nftAddress === 'string' ));
-    },[]);
-    
-    useEffect(()=>{
-        fetchERC721s();
-    },[fetchERC721s]);
+const {provider, getWallet, checkValidity}=useEthersComponents();
+
+  const {data:importedNfts}= useQuery({
+    queryKey:['fetch-imported-nfts', publicAddress],
+    queryFn: async ()=>{
+      const elements= await fetchContainingKeywordElements();
+       
+      return (elements as unknown as any[]).filter((element)=> typeof element.nftAddress === 'string' );
+    },
+    enabled: !!publicAddress,
+  });
     
     const zodERC20TxSchema= z.object({
     erc20TokenAddress: z.string().startsWith("0x",{'error': 'Invalid ERC20 Token Address !'}).length(42, {'error':'Invalid length of the contract address'}).nullish().optional(),
@@ -75,9 +75,43 @@ function TransferTokenForm({maxAmountToSend, tokenType, setTokenType, setMaxAmou
     medium:{ tipMultiplier: 1.0, baseFeeMultiplier: 0.1 }, // normal tip, small base bump
     fast:  { tipMultiplier: 1.5, baseFeeMultiplier: 0.25 } // higher tip, larger base bump
   };
+
+    const calculateGasFee= async (currentTip:bigint, baseFee:bigint, gasLimit:bigint, populatedTransaction:ethers.TransactionRequest)=>{
+
+    const out = {};
+      for (const [speed, cfg] of Object.entries(SPEEDS)) {
+        const tip = currentTip * BigInt(Math.floor(cfg.tipMultiplier * 100)) / 100n; // approximate multiplier
+        const bumpedBase = baseFee + (baseFee * BigInt(Math.floor(cfg.baseFeeMultiplier * 100)) / 100n);
+        // heuristic: allow base fee to rise 2x in next block window
+        const maxFee = bumpedBase * 2n + tip;
+        const expectedFee = (baseFee + tip) * gasLimit;
+        const worstFee = maxFee * gasLimit;
+    
+        const populatedTx: ethers.TransactionRequest = {
+          ...populatedTransaction,
+          gasLimit: gasLimit,
+          maxPriorityFeePerGas: tip,
+          maxFeePerGas: maxFee
+        };
+    
+        out[speed] = {
+          gasLimit,
+          maxPriorityFeePerGas: tip,
+          maxFeePerGas: maxFee,
+          expectedFeeWei: expectedFee,
+          worstFeeWei: worstFee,
+          expectedFeeEth: ethers.formatEther(expectedFee),
+          worstFeeEth: ethers.formatEther(worstFee),
+          populatedTx
+        };
+      }
+    
+      console.log(out);
+    setGasFeesOptions(out);
+
+
+  };
   
-
-
       const getGasFee= async ()=>{
         try {
 
@@ -86,23 +120,9 @@ function TransferTokenForm({maxAmountToSend, tokenType, setTokenType, setMaxAmou
 const isNFT = nftWatch('nftTokenAddress') && nftWatch('nftTokenAddress').trim().length !== 0;
 console.log({isNotContractTx, isNFT});
 
-        const isValid= await bcrypt.compare(password, passwordOfSession);
+        await checkValidity(password);
 
-        if(!isValid){
-          alert('Invalid Password !');
-          throw new Error("Invalid Password !");
-        }
-
-          const provider = new ethers.JsonRpcProvider(rpcURL);
-    
-          const walletToDecrypt= await ethers.Wallet.fromEncryptedJson(encryptedPrivatKey, password);
-
-          if(!walletToDecrypt){
-            alert('Something went wrong with action authentication.');
-            throw new Error("Couldn't decrypt the wallet with the provided password");
-          }
-
-          const decryptedWallet = new ethers.Wallet(walletToDecrypt.privateKey, provider);
+  const decryptedWallet= await getWallet(password);
     
           console.log(decryptedWallet);
     
@@ -119,6 +139,7 @@ alert('Something went wrong with gas estimation');
 
         if(!isNotContractTx){
         let contract:ethers.Contract;
+
         if(isNFT){
           const nftInterface = new ethers.Interface(erc721Abi);
           contract = new ethers.Contract(nftWatch('nftTokenAddress'), nftInterface, decryptedWallet);
@@ -156,47 +177,19 @@ alert('Something went wrong with gas estimation');
       const feeData = await provider.getFeeData();
       const currentTip = feeData.maxPriorityFeePerGas ? BigInt(feeData.maxPriorityFeePerGas) : ethers.parseUnits("2", "gwei");
     
-      const out = {};
-      for (const [speed, cfg] of Object.entries(SPEEDS)) {
-        const tip = currentTip * BigInt(Math.floor(cfg.tipMultiplier * 100)) / 100n; // approximate multiplier
-        const bumpedBase = baseFee + (baseFee * BigInt(Math.floor(cfg.baseFeeMultiplier * 100)) / 100n);
-        // heuristic: allow base fee to rise 2x in next block window
-        const maxFee = bumpedBase * 2n + tip;
-        const expectedFee = (baseFee + tip) * gasLimit;
-        const worstFee = maxFee * gasLimit;
-    
-        const populatedTx: ethers.TransactionRequest = {
-          ...populatedTransaction,
-          gasLimit: gasLimit,
-          maxPriorityFeePerGas: tip,
-          maxFeePerGas: maxFee
-        };
-    
-        out[speed] = {
-          gasLimit,
-          maxPriorityFeePerGas: tip,
-          maxFeePerGas: maxFee,
-          expectedFeeWei: expectedFee,
-          worstFeeWei: worstFee,
-          expectedFeeEth: ethers.formatEther(expectedFee),
-          worstFeeEth: ethers.formatEther(worstFee),
-          populatedTx
-        };
-      }
-    
-      console.log(out);
-    setGasFeesOptions(out);
+      await calculateGasFee(currentTip, baseFee, gasLimit, populatedTransaction);
       setIsLoading(false);
           setCurrentStep(1);
           setOpenModal(false);
+
+          return;
         }
     
-        console.log('ERC20 starts');
+        console.log('Gas fees for ERC20 starts');
 
-        
-          const erc20Interface = new ethers.Interface(erc20Abi);
-          contract = new ethers.Contract(watch('erc20TokenAddress'), erc20Interface, decryptedWallet);
-    
+        const erc20Interface = new ethers.Interface(erc20Abi);
+        contract = new ethers.Contract(watch('erc20TokenAddress'), erc20Interface, decryptedWallet);
+
     
           const decimals = await contract.decimals();
     
@@ -236,10 +229,10 @@ alert('Something went wrong with gas estimation');
           }
 
           console.log(estimateGas, 'gas estimate');
-    
-    
-          const gasLimit = BigInt(estimateGas) * 102n / 100n; // add 2% buffer
-    
+
+
+          const gasLimit = BigInt(estimateGas) * 105n / 100n; // add 5% buffer
+
       // 3. fee data
       const block = await provider.getBlock("latest");
       if (!block?.baseFeePerGas){
@@ -253,38 +246,12 @@ alert('Something went wrong with gas estimation');
       const feeData = await provider.getFeeData();
       const currentTip = feeData.maxPriorityFeePerGas ? BigInt(feeData.maxPriorityFeePerGas) : ethers.parseUnits("2", "gwei");
     
-      const out = {};
-      for (const [speed, cfg] of Object.entries(SPEEDS)) {
-        const tip = currentTip * BigInt(Math.floor(cfg.tipMultiplier * 100)) / 100n; // approximate multiplier
-        const bumpedBase = baseFee + (baseFee * BigInt(Math.floor(cfg.baseFeeMultiplier * 100)) / 100n);
-        // heuristic: allow base fee to rise 2x in next block window
-        const maxFee = bumpedBase * 2n + tip;
-        const expectedFee = (baseFee + tip) * gasLimit;
-        const worstFee = maxFee * gasLimit;
-    
-        const populatedTx: ethers.TransactionRequest = {
-          ...populatedTransaction,
-          gasLimit: gasLimit,
-          maxPriorityFeePerGas: tip,
-          maxFeePerGas: maxFee
-        };
-    
-        out[speed] = {
-          gasLimit,
-          maxPriorityFeePerGas: tip,
-          maxFeePerGas: maxFee,
-          expectedFeeWei: expectedFee,
-          worstFeeWei: worstFee,
-          expectedFeeEth: ethers.formatEther(expectedFee),
-          worstFeeEth: ethers.formatEther(worstFee),
-          populatedTx
-        };
-      }
-    
-                setGasFeesOptions(out);
+    await calculateGasFee(currentTip, baseFee, gasLimit, populatedTransaction);
                   setIsLoading(false);
           setCurrentStep(1);
           setOpenModal(false);
+
+          return;
         }
     
    
@@ -320,11 +287,12 @@ alert('Something went wrong with gas estimation');
     
         } catch (error) {
           console.log(error);
+            setPassword(undefined);
+            setIsLoading(false);
           alert(error);
         }
       }
-    
-    
+        
       const moveToTransactionsSummary =  async ()=>{
        try {
              setIsLoading(true);
@@ -341,12 +309,14 @@ alert('Something went wrong with gas estimation');
         
          if(watch('tokenAmountToBeSent') && maxAmountToSend && (maxAmountToSend < watch('tokenAmountToBeSent') || watch('tokenAmountToBeSent') === 0)){
           alert("You are not able to send the provided amount");
+            setPassword(undefined);
          setIsLoading(false);
           return;
         }
     
         if( (nftWatch('receiverAddress').length !== 42 && !nftWatch('receiverAddress').startsWith('0x')) ||  (watch('receiverAddress').length !== 42 && !watch('receiverAddress').startsWith("0x"))){
           alert("You haven't provided a valid address");
+        setPassword(undefined);
           setIsLoading(false);
           return;
         }
@@ -356,16 +326,15 @@ alert('Something went wrong with gas estimation');
 
     
        } catch (error) {
+        setPassword(undefined);
+        setIsLoading(false);
         alert(error);
         console.log(error);
-      setIsLoading(false); 
+      }finally{
+          setIsLoading(false);
       }
       
       }
-    
-
-
-
 
   return (
     <div className='
@@ -464,11 +433,15 @@ type='number'
             onClick={(e)=>{
                e.preventDefault();
               console.log(element);
+              console.log(Number(element.tokenBalance), 'balance');
 
-              const decimals = element.tokenMetadata.decimals ?? 10 ** 18
+              const decimals = 10 ** (element.tokenMetadata.decimals ?? 18);
 
+              console.log('Decimals', decimals);
 
-              setMaxAmountToSend(element.tokenBalance / decimals);
+              console.log(Number(element.tokenBalance) / decimals);
+
+              setMaxAmountToSend(Number(element.tokenBalance) / decimals);
               setValue('erc20TokenAddress', element.tokenAddress);
             }}
             >
