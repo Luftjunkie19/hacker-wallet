@@ -3,6 +3,7 @@ import React from 'react'
 import { FaEthereum } from 'react-icons/fa6';
 import { IoMdAddCircle } from 'react-icons/io';
 import { IoGitNetworkSharp } from 'react-icons/io5';
+import { networksArray } from '~chains';
 import { saveKey } from '~popup/IndexedDB/WalletDataStorage';
 import { useAppDispatch, useAppSelector } from '~popup/state-managment/ReduxWrapper';
 import { setCurrentNetwork } from '~popup/state-managment/slices/CurrentWalletNetwork';
@@ -13,33 +14,7 @@ function NetworksDropDown({}: Props) {
 
     const currentChain=useAppSelector((selector)=>selector.currentNetworkConnected.networkAlchemyId);
     const dispatch=useAppDispatch();
-    const networksArray=[
-      {
-        chainId:1,
-        blockExplorerURL:'https://etherscan.io',
-        networkName:'Ethereum (Mainnet',
-        rpcURL:`https://eth-mainnet.g.alchemy.com/v2/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}`,
-        currencySymbol:'ETH',
-        networkAlchemyId:'eth-mainnet',
-
-      },
-      {
-    chainId:11155111,
-    blockExplorerURL:'https://sepolia.etherscan.io',
-    networkName:'Ethereum Sepolia',
-    rpcURL:`https://eth-sepolia.g.alchemy.com/v2/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}`,
-    currencySymbol:'SepoliaETH',
-    networkAlchemyId:'eth-sepolia'
-},
-{
-   chainId:17000,
-    blockExplorerURL:'https://holesky.etherscan.io',
-    networkName:'Ethereum Holesky',
-    rpcURL:`https://eth-holesky.g.alchemy.com/v2/${process.env.PLASMO_PUBLIC_ALCHEMY_API_KEY}`,
-    currencySymbol:'HoleskyETH',
-    networkAlchemyId:'eth-holesky'
-}
-    ];
+   
 
   return (
 <DropdownMenu.Root>
